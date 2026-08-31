@@ -1,15 +1,6 @@
-import { pathToFileURL } from 'node:url';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
 import { expect, test } from '@playwright/test';
 
-// I test del progetto sono CommonJS (package.json senza "type"), quindi
-// __dirname e' disponibile e non serve import.meta.
-const radice = resolve(__dirname, '../..');
-const applicazione = pathToFileURL(resolve(radice, 'pianificatore.html')).href;
-const esempio = (nome: string) =>
-  readFileSync(resolve(radice, 'esempi', nome), 'utf8');
+import { frammento, indirizzo } from './aiuto';
 
 /**
  * Verifica grafica dell'applicazione: si apre da file://, senza rete
@@ -23,7 +14,7 @@ test.describe('pianificatore.html', () => {
       if (m.type() === 'error') errori.push(m.text());
     });
 
-    await page.goto(applicazione);
+    await page.goto(indirizzo);
 
     await expect(page).toHaveTitle('Pianificazione di progetto');
     await expect(page.locator('#stepTitle')).not.toBeEmpty();
@@ -31,9 +22,9 @@ test.describe('pianificatore.html', () => {
   });
 
   test('importa il passaggio 1 e abilita l\'approvazione', async ({ page }) => {
-    await page.goto(applicazione);
+    await page.goto(indirizzo);
 
-    await page.locator('#pasteBox').fill(esempio('passo-1-wbs.json'));
+    await page.locator('#pasteBox').fill(frammento('passo-1-wbs.json'));
     await page.locator('#btnCheck').click();
 
     await expect(page.locator('#btnApprove')).toBeEnabled();

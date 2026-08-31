@@ -10,7 +10,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  // open: 'never' — altrimenti, quando un test fallisce, il reporter avvia un
+  // server e resta in attesa invece di restituire il controllo.
+  reporter: [['html', { open: 'never' }]],
   use: {
     trace: 'on-first-retry',
   },

@@ -40,4 +40,6 @@ npm run typecheck        # controllo dei tipi sui test Playwright
 | Suite | Dove | Cosa copre |
 |---|---|---|
 | Node, senza dipendenze | `tests/test_*.js` | CPM, layout, validatori, flusso end to end |
-| Playwright | `tests/e2e/` | resa grafica reale in Chromium |
+| Playwright | `tests/e2e/` | resa grafica reale in Chromium, a 380px e 1440px, in tema chiaro e scuro |
+
+Le catture di reticolo e Gantt sono allegate al report HTML: `npm run test:report`.

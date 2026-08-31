@@ -95,6 +95,15 @@ npm test
 server. Sta in una sottocartella per non mescolarsi con la suite Node, che
 `playwright test` non deve raccogliere.
 
+Copre le quattro combinazioni chieste dalla verifica grafica — 380px e 1440px,
+tema chiaro e scuro — importando tutti e quattro gli esempi: nodi che non si
+sovrappongono, pagina che non sborda in orizzontale, Gantt alle tre scale che
+scorre dentro il proprio contenitore. Le catture di reticolo e Gantt finiscono
+allegate al report HTML, da guardare quando si tocca il layout.
+
+`aiuto.ts` fissa la data di avvio a una costante: senza, l'applicazione parte da
+oggi e la larghezza del Gantt cambierebbe a ogni esecuzione.
+
 **Aggiungi un test prima di correggere un difetto.** Tre bug veri sono emersi
 così: i campi vietati che non venivano rimossi da `project`, l'archivio che
 seguiva le modifiche manuali, e la riserva che restava in parallelo senza
@@ -104,11 +113,14 @@ proteggere nulla.
 
 In ordine di utilità:
 
-1. **Verifica grafica.** Avviata: `tests/e2e/` apre l'applicazione in Chromium
-   e verifica avvio senza errori e import del primo passaggio. Manca il resto:
-   importare tutti e quattro gli esempi, catturare reticolo e Gantt alle tre
-   scale, a 380px e a 1440px, in tema chiaro e scuro. Cercare nodi sovrapposti,
-   frecce che attraversano le scatole, colonne che debordano.
+1. **Instradamento dei legami lunghi.** La verifica grafica ha trovato un
+   difetto vero: i legami che saltano piu' di un rango vengono instradati alla
+   quota verticale del nodo di arrivo, senza aggirare i nodi che incontrano.
+   Sul piano di esempio due frecce attraversano una scatola. La correzione sta
+   in `edgePath` e nell'assegnazione delle corsie dentro LAYOUT CORE: serve una
+   corsia libera fra i ranghi per i legami lunghi. Il test esiste gia', in
+   `tests/e2e/reticolo.spec.ts`, marcato `test.fixme`: togli il `fixme` quando
+   lo affronti.
 2. **Esportazione PDF.** Oggi c'è solo SVG del reticolo. Serve `@media print`
    con impaginazione e riduzione di scala: mai ritaglio silenzioso.
 3. **Esportazione immagine del Gantt.** Il reticolo esporta SVG, il Gantt no.
