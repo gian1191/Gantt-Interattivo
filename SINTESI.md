@@ -4,6 +4,10 @@ Stato del repository al 31 agosto 2026. Questo documento racconta che cosa è
 stato fatto finora e che cosa resta in attesa, così da poter riprendere il
 lavoro in una sessione successiva senza doverlo ricostruire.
 
+Tutto quanto è descritto qui è già unito nel ramo `main`: l'ultima cosa a
+entrarci è stata la correzione dell'instradamento dei legami lunghi, con il
+commit di merge `63130bf`. Non ci sono lavori in sospeso su altri rami.
+
 ## Che cos'è questo repository
 
 Contiene il **pianificatore di progetto**: un'applicazione a file singolo per la
