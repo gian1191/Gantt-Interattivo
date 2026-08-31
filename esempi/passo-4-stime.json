@@ -1,0 +1,82 @@
+{
+  "coreVersion": "1.0",
+  "methodology": "predittivo",
+  "profileVersion": "1.0",
+  "step": 4,
+  "estimates": [
+    {
+      "id": "A1",
+      "duration": 15,
+      "technique": "three-point",
+      "optimistic": 10,
+      "mostLikely": 14,
+      "pessimistic": 26,
+      "basis": "Tre workshop più consolidamento; analogia con un progetto simile",
+      "confidence": "medium",
+      "sourceDoc": "Scope"
+    },
+    {
+      "id": "A2",
+      "duration": 8,
+      "technique": "analogous",
+      "basis": "Durata tipica dell'analisi di impatto su sistemi noti",
+      "confidence": "high",
+      "sourceDoc": "Storico"
+    },
+    {
+      "id": "A3",
+      "duration": 12,
+      "technique": "expert",
+      "basis": "Stima del capo progetto tecnico",
+      "confidence": "medium",
+      "sourceDoc": "Scope"
+    },
+    {
+      "id": "A4",
+      "duration": 30,
+      "technique": "three-point",
+      "optimistic": 22,
+      "mostLikely": 28,
+      "pessimistic": 44,
+      "basis": "Bottom-up sui servizi previsti, con margine di integrazione",
+      "confidence": "low",
+      "sourceDoc": "Disegno"
+    },
+    {
+      "id": "A5",
+      "duration": 25,
+      "technique": "three-point",
+      "optimistic": 18,
+      "mostLikely": 24,
+      "pessimistic": 36,
+      "basis": "Numero di schermate per tempo unitario storico",
+      "confidence": "medium",
+      "sourceDoc": "Disegno"
+    },
+    {
+      "id": "A6",
+      "duration": 15,
+      "technique": "parametric",
+      "basis": "Casi di prova previsti per rendimento medio giornaliero",
+      "confidence": "medium",
+      "sourceDoc": "Piano di collaudo"
+    },
+    {
+      "id": "A7",
+      "duration": 6,
+      "technique": "analogous",
+      "basis": "Durata standard della verifica di sicurezza",
+      "confidence": "high",
+      "sourceDoc": "Standard interni"
+    },
+    {
+      "id": "A8",
+      "duration": 5,
+      "technique": "expert",
+      "basis": "Finestra di rilascio e prove di ripristino",
+      "confidence": "high",
+      "sourceDoc": "Procedura di rilascio"
+    }
+  ],
+  "openQuestions": []
+}

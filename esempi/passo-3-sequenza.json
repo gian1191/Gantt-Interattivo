@@ -1,0 +1,155 @@
+{
+  "coreVersion": "1.0",
+  "methodology": "predittivo",
+  "profileVersion": "1.0",
+  "step": 3,
+  "links": [
+    {
+      "from": "START",
+      "to": "A1",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "START",
+      "to": "X1",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "START",
+      "to": "X2",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "A1",
+      "to": "A2",
+      "type": "SS",
+      "lag": 5,
+      "nature": "discretionary",
+      "origin": "internal",
+      "rationale": "L'analisi di impatto può partire sui primi requisiti consolidati"
+    },
+    {
+      "from": "A1",
+      "to": "M1",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "A2",
+      "to": "M1",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "M1",
+      "to": "A3",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "A3",
+      "to": "A4",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "X1",
+      "to": "A4",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "external"
+    },
+    {
+      "from": "A3",
+      "to": "A5",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "A4",
+      "to": "A6",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "A5",
+      "to": "A6",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "X2",
+      "to": "A6",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "external"
+    },
+    {
+      "from": "A4",
+      "to": "A7",
+      "type": "FS",
+      "lag": 0,
+      "nature": "discretionary",
+      "origin": "internal",
+      "rationale": "La verifica di sicurezza richiede i servizi completi"
+    },
+    {
+      "from": "A6",
+      "to": "M2",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "A7",
+      "to": "M2",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "M2",
+      "to": "A8",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    },
+    {
+      "from": "A8",
+      "to": "END",
+      "type": "FS",
+      "lag": 0,
+      "nature": "mandatory",
+      "origin": "internal"
+    }
+  ],
+  "openQuestions": []
+}
