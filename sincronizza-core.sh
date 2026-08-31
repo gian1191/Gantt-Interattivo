@@ -12,7 +12,7 @@ def blocco(nome, exports):
 open('tests/cpm.js','w').write(blocco('CPM',
   '{ makeCalendar, topoSort, computeCPM, simulate, esFromLink, lfFromLink }'))
 open('tests/layout.js','w').write(blocco('LAYOUT',
-  '{ assignRanks, orderWithinLayers, countCrossings, layoutNetwork, edgePath }'))
+  '{ assignRanks, orderWithinLayers, countCrossings, layoutNetwork,\n  crossedNodes, freeLane, edgeRoute, edgePath }'))
 print('core sincronizzati')
 PY
 cd tests && node test_cpm.js | tail -1 && node test_layout.js | tail -1 && node test_app.js | tail -1

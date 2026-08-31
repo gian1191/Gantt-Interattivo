@@ -1,4 +1,5 @@
-const { assignRanks, countCrossings, layoutNetwork, edgePath } = require('./layout.js');
+const { assignRanks, countCrossings, layoutNetwork,
+        crossedNodes, freeLane, edgeRoute, edgePath } = require('./layout.js');
 const { topoSort } = require('./cpm.js');
 
 let pass = 0, fail = 0;
@@ -108,7 +109,84 @@ eq(p.includes('V'), true, 'legame retrogrado aggira');
 eq(p.split('H').length > 3, true, 'percorso retrogrado a piu segmenti');
 
 /* ---------------------------------------------------------- */
-section('8. Grafo ampio: tenuta e prestazioni');
+section('8. Instradamento dei legami lunghi');
+
+/* Vertici di un percorso ortogonale 'M x y H .. V .. H ..'. Fra due vertici il
+   segmento e' rettilineo, quindi bastano loro per cercare gli attraversamenti. */
+function vertici(d) {
+  const t = d.split(' ');
+  const punti = [[Number(t[1]), Number(t[2])]];
+  for (let i = 3; i < t.length; i += 2) {
+    const [x, y] = punti[punti.length - 1];
+    punti.push(t[i] === 'H' ? [Number(t[i + 1]), y] : [x, Number(t[i + 1])]);
+  }
+  return punti;
+}
+
+/* Attraversamenti veri: sfiorare il bordo e' l attacco della freccia. */
+function attraversa(d, n) {
+  const p = vertici(d);
+  const x1 = n.x + 1, x2 = n.x + n.w - 1, y1 = n.y + 1, y2 = n.y + n.h - 1;
+  for (let i = 1; i < p.length; i++) {
+    const [ax, ay] = p[i - 1], [bx, by] = p[i];
+    const lo = (a, b) => Math.min(a, b), hi = (a, b) => Math.max(a, b);
+    if (hi(ax, bx) > x1 && lo(ax, bx) < x2 && hi(ay, by) > y1 && lo(ay, by) < y2) return true;
+  }
+  return false;
+}
+
+// tre ranghi affiancati, l ostacolo esattamente sulla quota di arrivo
+const met = { gapX: 68, nodeW: 100, laneTop: 6, laneBottom: 400 };
+const P = { x: 0,   y: 100, w: 100, h: 60, rank: 0 };
+const M = { x: 168, y: 100, w: 100, h: 60, rank: 1 };
+const Q = { x: 336, y: 100, w: 100, h: 60, rank: 2 };
+
+eq(crossedNodes(P, Q, { P, M, Q }).length, 1, 'un solo nodo fra i due ranghi');
+eq(crossedNodes(P, M, { P, M, Q }).length, 0, 'ranghi adiacenti: nessun ostacolo');
+
+p = edgePath(P, Q, met, 0, [M]);
+eq(attraversa(p, M), false, 'il legame lungo aggira la scatola intermedia');
+eq(p.startsWith('M 100 130'), true, 'parte comunque dal bordo destro');
+eq(p.endsWith('H 336'), true, 'arriva comunque al bordo sinistro');
+
+// senza ostacoli sulla quota di arrivo il disegno non cambia
+const R = { x: 336, y: 240, w: 100, h: 60, rank: 2 };
+eq(edgePath(P, R, met, 0, [M]), edgePath(P, R, met, 0),
+   'quota libera: percorso identico a prima');
+
+// due legami lunghi nella stessa condizione non si sovrappongono
+eq(edgePath(P, Q, met, 0, [M]) !== edgePath(P, Q, met, 1, [M]), true,
+   'corsie distinte per legami lunghi paralleli');
+
+// varco scelto: il piu vicino alla quota di arrivo, dentro i limiti
+eq(freeLane(130, [M], { top: 6, bottom: 400 }, 0), 88, 'esce sopra l ostacolo, staccata dal bordo');
+eq(freeLane(400, [M], { top: 6, bottom: 400 }, 0), 400, 'quota gia libera, nessuna deviazione');
+const lane = freeLane(130, [M], { top: 6, bottom: 400 }, 0);
+eq(lane >= 6 && lane <= 400, true, 'la corsia resta dentro i limiti del disegno');
+
+// l etichetta segue il tracciato, non il punto medio geometrico
+const rotta = edgeRoute(P, Q, met, 0, [M]);
+eq(attraversa('M ' + rotta.labelX + ' ' + rotta.labelY + ' H ' + rotta.labelX, M), false,
+   'l etichetta non finisce dentro una scatola');
+
+// il piano intero: nessuna freccia attraversa un nodo
+g = build(['START','A','B','C','D','END'],
+  [L('START','A'), L('START','B'), L('A','B'), L('A','C'), L('B','C'),
+   L('A','D'), L('C','D'), L('D','END'), L('START','END')]);
+out = layoutNetwork(g.tasks, g.links, g.order);
+let tagli = 0;
+for (const l of g.links) {
+  const a = out.nodes[l.from], b = out.nodes[l.to];
+  const d = edgePath(a, b, out.metrics, 0, crossedNodes(a, b, out.nodes));
+  for (const id of Object.keys(out.nodes))
+    if (id !== l.from && id !== l.to && attraversa(d, out.nodes[id])) tagli++;
+}
+eq(tagli, 0, 'nessuna freccia attraversa una scatola sul grafo di prova');
+eq(Object.keys(out.nodes).every(id => out.nodes[id].y >= 0), true,
+   'la banda riservata non manda le coordinate in negativo');
+
+/* ---------------------------------------------------------- */
+section('9. Grafo ampio: tenuta e prestazioni');
 
 const wide = ['START'];
 const wideLinks = [];

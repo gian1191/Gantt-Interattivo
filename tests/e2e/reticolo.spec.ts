@@ -60,23 +60,15 @@ for (const { larghezza, tema } of combinazioni) {
 }
 
 /**
- * DIFETTO NOTO, non causato da questa PR: i legami che saltano piu' di un rango
- * vengono instradati alla quota verticale del nodo di arrivo, senza aggirare i
- * nodi che incontrano. Sul piano di esempio due frecce attraversano una scatola:
- *
- *   "Raccolta requisiti funzionali" -> "Requisiti approvati"
- *       taglia "Analisi di impatto sui sistemi"
- *   "Disponibilita' ambiente di collaudo" -> "Collaudo funzionale"
- *       taglia "Sviluppo interfaccia cliente"
- *
- * La correzione sta in `edgePath` e nell'assegnazione delle corsie dentro
- * LAYOUT CORE: serve una corsia libera fra i ranghi per i legami lunghi.
- * Il test resta qui, in fixme, per non perdere la verifica una volta corretto.
+ * I legami che saltano piu' di un rango devono aggirare i nodi che incontrano:
+ * `edgeRoute` cerca una corsia libera fra gli ostacoli dei ranghi intermedi.
+ * Questo test campiona ogni freccia e pretende che nessun punto cada dentro una
+ * scatola.
  */
 test.describe('reticolo, instradamento dei legami lunghi', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test.fixme('nessuna freccia attraversa una scatola', async ({ page }) => {
+  test('nessuna freccia attraversa una scatola', async ({ page }) => {
     await caricaPianoCompleto(page);
     await page.locator('#navNet').click();
     await expect(page.locator('#netCanvas .node').first()).toBeVisible();

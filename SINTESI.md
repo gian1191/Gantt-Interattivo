@@ -47,12 +47,13 @@ Il repository ha ora due suite, che coprono cose diverse.
 | Node, senza dipendenze | `tests/test_*.js` | percorso critico, layout, validatori, flusso completo |
 | Playwright | `tests/e2e/` | come l'applicazione appare davvero in un browser |
 
-La suite Node conta **235 verifiche** ed era già parte del progetto. Si lancia
+La suite Node conta **248 verifiche**, tredici delle quali aggiunte qui per
+l'instradamento delle frecce; il resto era già parte del progetto. Si lancia
 con `./sincronizza-core.sh`, che prima riallinea `tests/cpm.js` e
 `tests/layout.js` ai blocchi `CORE` dentro l'HTML, così il codice messo alla
 prova è quello che gira davvero.
 
-La suite Playwright è nuova. Conta **38 test** e apre `pianificatore.html` con
+La suite Playwright è nuova. Conta **39 test** e apre `pianificatore.html` con
 un indirizzo `file://`, esattamente come fa chi ci clicca sopra due volte:
 nessun server, nessuna configurazione.
 
@@ -76,7 +77,34 @@ Che cosa risulta a posto:
 Le immagini del reticolo e del Gantt vengono allegate al report: si guardano con
 `npm run test:report`.
 
-### 4. Integrazione continua
+### 4. Instradamento dei legami lunghi, corretto
+
+Era l'unico difetto vero trovato dalla verifica grafica: i legami che saltano
+più di un rango correvano alla quota verticale del nodo di arrivo e tagliavano
+le scatole che incontravano per strada. Sul piano di esempio due frecce
+attraversavano un nodo.
+
+La correzione sta in `LAYOUT CORE`, in tre pezzi:
+
+- `layoutNetwork` riserva una banda libera sopra e sotto i nodi, dimensionata
+  sui legami lunghi presenti. Quando i ranghi intermedi sono fitti può non
+  restare alcun varco interno, e la via di fuga deve stare dentro il disegno;
+- `crossedNodes` raccoglie gli ostacoli di un legame, cioè i soli nodi dei
+  ranghi intermedi: partenza e arrivo non lo sono, perché la freccia ne tocca i
+  bordi;
+- `freeLane` sceglie la quota di traversata: il varco percorribile più vicino
+  alla quota di arrivo, così la deviazione resta minima. Se quella quota è già
+  libera la restituisce invariata, e il disegno non cambia.
+
+`edgeRoute` compone il percorso e restituisce anche l'ancoraggio
+dell'etichetta, che prima stava al punto medio geometrico e con una traversata
+poteva finire lontano dalla freccia. `edgePath` resta come prima, riduttore al
+solo tracciato.
+
+Il test che era rimasto in `test.fixme` è ora attivo e passa. Le verifiche
+Node su LAYOUT CORE sono salite da 22 a 35.
+
+### 5. Integrazione continua
 
 `.github/workflows/test.yml` esegue a ogni push e a ogni pull request prima la
 suite Node e poi quella Playwright, e conserva il report come allegato. Entrambe
@@ -84,39 +112,9 @@ passano anche sul runner di GitHub.
 
 ## Che cosa resta in attesa
 
-L'elenco completo, in ordine di utilità, vive in [`CLAUDE.md`](CLAUDE.md). Qui
-sta in evidenza il primo punto, perché è l'unico difetto vero trovato finora.
-
-### Instradamento dei legami lunghi (rimandato a una sessione futura)
-
-**Il problema.** Nel reticolo, i legami che saltano più di un rango vengono
-disegnati alla quota verticale del nodo di arrivo, senza aggirare i nodi che
-incontrano lungo la strada. Sul piano di esempio due frecce attraversano una
-scatola:
-
-| Legame | Attraversa |
-|---|---|
-| «Raccolta requisiti funzionali» → «Requisiti approvati» | «Analisi di impatto sui sistemi» |
-| «Disponibilità ambiente di collaudo» → «Collaudo funzionale» | «Sviluppo interfaccia cliente» |
-
-**Dove correggerlo.** In `edgePath` e nell'assegnazione delle corsie, dentro il
-blocco `LAYOUT CORE` di `pianificatore.html`. Serve una corsia libera fra i
-ranghi da riservare ai legami lunghi.
-
-**Il test esiste già.** Sta in `tests/e2e/reticolo.spec.ts`, marcato
-`test.fixme`. È stato provato: senza il `fixme` fallisce e riporta esattamente i
-due attraversamenti qui sopra. È stato lasciato in `fixme` perché il difetto
-esisteva già e non era il caso di tenere l'integrazione continua in rosso per
-qualcosa che nessuna modifica recente ha causato. **Quando si affronterà il
-problema, basta togliere il `fixme`.**
-
-**Attenzione.** Il blocco `LAYOUT CORE` è coperto da 22 verifiche della suite
-Node. Dopo ogni modifica va rilanciato `./sincronizza-core.sh`, perché
-`tests/layout.js` è un file generato e non si modifica a mano.
-
-### Gli altri punti aperti
-
-Vengono dal progetto originale e non sono stati toccati:
+L'elenco completo, in ordine di utilità, vive in [`CLAUDE.md`](CLAUDE.md). Il
+difetto che stava in cima è stato corretto; quel che resta sono estensioni
+previste dalla specifica, non correzioni.
 
 1. esportazione in PDF, oggi assente: serve `@media print` con impaginazione e
    riduzione di scala, senza mai ritagliare in silenzio;
@@ -132,10 +130,10 @@ Vengono dal progetto originale e non sono stati toccati:
 ## Come riprendere
 
 ```bash
-./sincronizza-core.sh    # suite Node: 235 verifiche
+./sincronizza-core.sh    # suite Node: 248 verifiche
 npm ci                   # dipendenze di sviluppo, solo per i test grafici
 npx playwright install chromium
-npm test                 # suite Playwright: 38 test
+npm test                 # suite Playwright: 39 test
 npm run test:report      # report con le immagini di reticolo e Gantt
 npx tsc --noEmit         # controllo dei tipi
 ```
