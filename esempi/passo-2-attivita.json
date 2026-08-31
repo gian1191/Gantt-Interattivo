@@ -9,8 +9,8 @@
       "label": "Core Banking"
     },
     {
-      "id": "ANAG",
-      "label": "Sistema Anagrafiche"
+      "id": "CANBIZ",
+      "label": "Canale Digitale Imprese"
     }
   ],
   "tasks": [
@@ -83,7 +83,7 @@
       "name": "Disponibilità ambiente di collaudo",
       "type": "externalConstraint",
       "wbsId": "1.3",
-      "contributor": "ANAG",
+      "contributor": "CANBIZ",
       "sourceDoc": "Vincoli e assunzioni"
     },
     {
