@@ -30,7 +30,7 @@ L'applicazione resta senza dipendenze: npm serve **solo** agli strumenti di
 verifica, che non finiscono dentro `pianificatore.html`.
 
 ```bash
-./sincronizza-core.sh    # suite Node: riallinea i moduli CORE e lancia 235 verifiche
+./sincronizza-core.sh    # suite Node: riallinea i moduli CORE e lancia 248 verifiche
 npm ci                   # dipendenze di sviluppo (solo per i test grafici)
 npx playwright install chromium
 npm test                 # suite Playwright: apre l'applicazione in un browser

@@ -52,7 +52,7 @@ Dentro `pianificatore.html`, in ordine:
 |---|---|
 | `<style>` | design token, tema chiaro e scuro |
 | `CPM CORE START/END` | calendario, topologia, forward e backward pass, float, Monte Carlo |
-| `LAYOUT CORE START/END` | ranghi, baricentro, coordinate, percorsi delle frecce |
+| `LAYOUT CORE START/END` | ranghi, baricentro, coordinate, corsie e percorsi delle frecce |
 | STATO | `state`, cronologia, persistenza |
 | PARSER | estrazione tollerante del JSON |
 | VALIDATORI | uno per passaggio, con errori bloccanti e avvisi |
@@ -75,7 +75,7 @@ Lo script estrae i blocchi `CORE` dall'HTML in `tests/cpm.js` e
 `tests/layout.js`, poi esegue le quattro suite. **Eseguilo dopo ogni modifica ai
 blocchi CORE**: quei due file sono generati, non si modificano a mano.
 
-235 verifiche, nessuna dipendenza. `test_app.js` e `test_e2e.js` caricano lo
+248 verifiche, nessuna dipendenza. `test_app.js` e `test_e2e.js` caricano lo
 script direttamente dall'HTML in una `vm` con un DOM finto, quindi testano il
 codice che gira davvero, non una copia.
 
@@ -104,33 +104,26 @@ allegate al report HTML, da guardare quando si tocca il layout.
 `aiuto.ts` fissa la data di avvio a una costante: senza, l'applicazione parte da
 oggi e la larghezza del Gantt cambierebbe a ogni esecuzione.
 
-**Aggiungi un test prima di correggere un difetto.** Tre bug veri sono emersi
-così: i campi vietati che non venivano rimossi da `project`, l'archivio che
-seguiva le modifiche manuali, e la riserva che restava in parallelo senza
-proteggere nulla.
+**Aggiungi un test prima di correggere un difetto.** Quattro bug veri sono
+emersi così: i campi vietati che non venivano rimossi da `project`, l'archivio
+che seguiva le modifiche manuali, la riserva che restava in parallelo senza
+proteggere nulla, e le frecce lunghe che attraversavano le scatole del
+reticolo.
 
 ## Cosa manca
 
 In ordine di utilità:
 
-1. **Instradamento dei legami lunghi.** La verifica grafica ha trovato un
-   difetto vero: i legami che saltano piu' di un rango vengono instradati alla
-   quota verticale del nodo di arrivo, senza aggirare i nodi che incontrano.
-   Sul piano di esempio due frecce attraversano una scatola. La correzione sta
-   in `edgePath` e nell'assegnazione delle corsie dentro LAYOUT CORE: serve una
-   corsia libera fra i ranghi per i legami lunghi. Il test esiste gia', in
-   `tests/e2e/reticolo.spec.ts`, marcato `test.fixme`: togli il `fixme` quando
-   lo affronti.
-2. **Esportazione PDF.** Oggi c'è solo SVG del reticolo. Serve `@media print`
+1. **Esportazione PDF.** Oggi c'è solo SVG del reticolo. Serve `@media print`
    con impaginazione e riduzione di scala: mai ritaglio silenzioso.
-3. **Esportazione immagine del Gantt.** Il reticolo esporta SVG, il Gantt no.
-4. **Baseline.** `state.baseline` esiste e `setEditMode` la rispetta, ma manca
+2. **Esportazione immagine del Gantt.** Il reticolo esporta SVG, il Gantt no.
+3. **Baseline.** `state.baseline` esiste e `setEditMode` la rispetta, ma manca
    il comando che la congela e il confronto con la revisione corrente.
-5. **Compressione.** La specifica la descrive: proporre i legami discrezionali
+4. **Compressione.** La specifica la descrive: proporre i legami discrezionali
    sul percorso critico per il fast-tracking e le attività critiche per il
    crashing, mostrando l'effetto senza applicare nulla da soli.
-6. **Import parziale** per le risposte troncate, da fondere in due tranche.
-7. **Work package iterativi**, estensione prevista nella specifica.
+5. **Import parziale** per le risposte troncate, da fondere in due tranche.
+6. **Work package iterativi**, estensione prevista nella specifica.
 
 ## Convenzioni
 
