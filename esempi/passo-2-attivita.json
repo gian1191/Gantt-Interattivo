@@ -1,0 +1,133 @@
+{
+  "coreVersion": "1.0",
+  "methodology": "predittivo",
+  "profileVersion": "1.0",
+  "step": 2,
+  "contributors": [
+    {
+      "id": "CORE",
+      "label": "Core Banking"
+    },
+    {
+      "id": "ANAG",
+      "label": "Sistema Anagrafiche"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "START",
+      "name": "Avvio del progetto",
+      "type": "milestone",
+      "wbsId": "1",
+      "owner": "GT",
+      "milestoneSource": "charter"
+    },
+    {
+      "id": "A1",
+      "name": "Raccolta requisiti funzionali",
+      "type": "activity",
+      "wbsId": "1.1.1",
+      "owner": "GT",
+      "completionCriteria": "Verbale dei workshop firmato e requisiti tracciati a matrice"
+    },
+    {
+      "id": "A2",
+      "name": "Analisi di impatto sui sistemi",
+      "type": "activity",
+      "wbsId": "1.1.1",
+      "owner": "GT",
+      "completionCriteria": "Documento di impatto approvato dai referenti di sistema"
+    },
+    {
+      "id": "M1",
+      "name": "Requisiti approvati",
+      "type": "milestone",
+      "wbsId": "1.1.1",
+      "owner": "BO",
+      "milestoneSource": "charter"
+    },
+    {
+      "id": "A3",
+      "name": "Disegno tecnico dei servizi",
+      "type": "activity",
+      "wbsId": "1.1.2",
+      "owner": "GT",
+      "completionCriteria": "Specifiche di interfaccia pubblicate e revisionate"
+    },
+    {
+      "id": "X1",
+      "name": "Disponibilità API di Core Banking",
+      "type": "externalConstraint",
+      "wbsId": "1.2.1",
+      "contributor": "CORE",
+      "sourceDoc": "Vincoli e assunzioni"
+    },
+    {
+      "id": "A4",
+      "name": "Sviluppo servizi di back end",
+      "type": "activity",
+      "wbsId": "1.2.1",
+      "owner": "GT",
+      "completionCriteria": "Servizi rilasciati in ambiente di integrazione e smoke test superato"
+    },
+    {
+      "id": "A5",
+      "name": "Sviluppo interfaccia cliente",
+      "type": "activity",
+      "wbsId": "1.2.2",
+      "owner": "GT",
+      "completionCriteria": "Percorsi principali navigabili in ambiente di integrazione"
+    },
+    {
+      "id": "X2",
+      "name": "Disponibilità ambiente di collaudo",
+      "type": "externalConstraint",
+      "wbsId": "1.3",
+      "contributor": "ANAG",
+      "sourceDoc": "Vincoli e assunzioni"
+    },
+    {
+      "id": "A6",
+      "name": "Collaudo funzionale",
+      "type": "activity",
+      "wbsId": "1.3",
+      "owner": "BO",
+      "completionCriteria": "Tutti i casi di prova eseguiti, nessun difetto bloccante aperto"
+    },
+    {
+      "id": "A7",
+      "name": "Collaudo di sicurezza",
+      "type": "activity",
+      "wbsId": "1.3",
+      "owner": "SEC",
+      "completionCriteria": "Rapporto di verifica emesso senza rilievi critici"
+    },
+    {
+      "id": "M2",
+      "name": "Collaudo superato",
+      "type": "milestone",
+      "wbsId": "1.3",
+      "owner": "BO",
+      "milestoneSource": "contract"
+    },
+    {
+      "id": "A8",
+      "name": "Preparazione del rilascio",
+      "type": "activity",
+      "wbsId": "1.4",
+      "owner": "GT",
+      "completionCriteria": "Piano di rilascio approvato e prova di ripristino eseguita"
+    },
+    {
+      "id": "END",
+      "name": "Chiusura del progetto",
+      "type": "milestone",
+      "wbsId": "1",
+      "owner": "GT",
+      "milestoneSource": "charter"
+    }
+  ],
+  "openQuestions": [
+    "Il collaudo di sicurezza rientra nel perimetro di progetto o è gestito centralmente?"
+  ]
+}

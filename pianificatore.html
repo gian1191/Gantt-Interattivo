@@ -1,0 +1,2544 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pianificazione di progetto</title>
+<style>
+  :root {
+    --font-ui: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "Cascadia Mono", Consolas, "SF Mono", monospace;
+
+    --surface: #ffffff;
+    --surface-sunken: #f5f6f8;
+    --surface-alt: #fafbfc;
+    --border: #dadce0;
+    --border-soft: #eceff1;
+    --text-strong: #1f1f1f;
+    --text-muted: #5f6368;
+    --accent: #1a5fb4;
+    --accent-soft: #e8f0fa;
+
+    --activity-fill: #eaf3f8;
+    --activity-stroke: #2f75b5;
+    --milestone-fill: #e2f0d9;
+    --milestone-stroke: #548235;
+    --external-fill: #fff2cc;
+    --external-stroke: #bf9000;
+    --critical-fill: #fce4d6;
+    --critical-stroke: #c00000;
+    --near-fill: #fff4e6;
+    --near-stroke: #c55a11;
+
+    --danger: #b3261e;
+    --danger-soft: #fdeceb;
+    --ok: #1e6b3a;
+    --ok-soft: #eaf4ee;
+    --warn: #8a6100;
+    --warn-soft: #fdf5e3;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1e1f22;
+      --surface-sunken: #161719;
+      --surface-alt: #26282c;
+      --border: #3a3d42;
+      --border-soft: #2e3034;
+      --text-strong: #e8eaed;
+      --text-muted: #9aa0a6;
+      --accent: #7cb0f0;
+      --accent-soft: #1d2c3f;
+
+      --activity-fill: #1d2c36;
+      --activity-stroke: #5b9bd5;
+      --milestone-fill: #1e2c1c;
+      --milestone-stroke: #7ba85c;
+      --external-fill: #322a12;
+      --external-stroke: #d4a72c;
+      --critical-fill: #33201c;
+      --critical-stroke: #e06c5e;
+      --near-fill: #322619;
+      --near-stroke: #d98a4f;
+
+      --danger: #e88b82;
+      --danger-soft: #2e1e1c;
+      --ok: #7fc79b;
+      --ok-soft: #1b2a21;
+      --warn: #d9b45c;
+      --warn-soft: #2b2415;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--surface-sunken);
+    font-family: var(--font-ui);
+    color: var(--text-strong);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* ---------- intestazione ---------- */
+
+  .topbar {
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 18px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 40;
+    flex-wrap: wrap;
+  }
+  .brand { font-weight: 600; font-size: 14px; margin-right: 4px; }
+  .brand small { display: block; font-weight: 400; color: var(--text-muted); font-size: 11px; }
+
+  .nav { display: flex; gap: 2px; }
+  .nav button {
+    font: inherit; padding: 6px 14px; cursor: pointer;
+    background: transparent; color: var(--text-muted);
+    border: 1px solid transparent; border-radius: 6px;
+  }
+  .nav button[aria-current="true"] {
+    background: var(--accent-soft); color: var(--accent);
+    border-color: var(--accent); font-weight: 600;
+  }
+  .nav button:disabled { opacity: .4; cursor: not-allowed; }
+
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .rev { color: var(--text-muted); font-size: 11px; font-family: var(--font-mono); }
+
+  /* ---------- struttura ---------- */
+
+  main { padding: 18px; max-width: 1180px; margin: 0 auto; }
+  section[hidden] { display: none !important; }
+
+  h2 { font-size: 15px; margin: 0 0 2px; }
+  h3 { font-size: 13px; margin: 0 0 8px; text-transform: uppercase;
+       letter-spacing: .04em; color: var(--text-muted); }
+  .lede { color: var(--text-muted); margin: 0 0 14px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; margin-bottom: 14px;
+  }
+
+  .btn {
+    font: inherit; padding: 6px 12px; cursor: pointer;
+    background: var(--surface); color: var(--text-strong);
+    border: 1px solid var(--border); border-radius: 6px;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn:disabled:hover { border-color: var(--border); color: var(--text-strong); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.08); color: #fff; }
+  .btn.quiet { border-color: transparent; color: var(--text-muted); }
+  .btn.danger { color: var(--danger); border-color: var(--danger); }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .spacer { flex: 1; }
+
+  textarea {
+    width: 100%; min-height: 150px; resize: vertical;
+    font-family: var(--font-mono); font-size: 12px; line-height: 1.45;
+    padding: 10px; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-alt); color: var(--text-strong);
+  }
+  input[type="text"], input[type="date"], input[type="number"], select {
+    font: inherit; padding: 5px 8px; border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-strong);
+  }
+
+  /* ---------- avanzamento ---------- */
+
+  .steps { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .step-chip {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 8px 14px; border-radius: 8px; font-size: 12px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-muted); flex: 1 1 160px;
+  }
+  .step-chip .n {
+    font-family: var(--font-mono); font-size: 11px;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid currentColor; flex: none;
+  }
+  .step-chip.done { color: var(--ok); background: var(--ok-soft); border-color: var(--ok); }
+  .step-chip.active { color: var(--accent); background: var(--accent-soft);
+                      border-color: var(--accent); font-weight: 600; }
+
+  /* ---------- diagnostica ---------- */
+
+  .diag { margin-top: 12px; }
+  .diag-item {
+    display: flex; gap: 10px; padding: 8px 10px; border-radius: 6px;
+    margin-bottom: 6px; font-size: 12px; align-items: baseline;
+  }
+  .diag-item .tag {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: .04em;
+    text-transform: uppercase; flex: none; padding-top: 1px;
+  }
+  .diag-item.err  { background: var(--danger-soft); color: var(--danger); }
+  .diag-item.warn { background: var(--warn-soft);   color: var(--warn); }
+  .diag-item.ok   { background: var(--ok-soft);     color: var(--ok); }
+  .diag-item code { font-family: var(--font-mono); }
+
+  /* ---------- tabelle e alberi ---------- */
+
+  table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border-soft); }
+  th { color: var(--text-muted); font-weight: 600; font-size: 11px;
+       text-transform: uppercase; letter-spacing: .03em; }
+  td.num, th.num { text-align: right; font-family: var(--font-mono); }
+  tbody tr:hover { background: var(--surface-alt); }
+
+  .tree { font-family: var(--font-mono); font-size: 12px; }
+  .tree-row { padding: 3px 0; display: flex; gap: 10px; }
+  .tree-row .code { color: var(--text-muted); flex: none; min-width: 64px; }
+  .tree-row .pkg { color: var(--accent); font-size: 10px; align-self: center; }
+
+  .pill {
+    display: inline-block; padding: 1px 7px; border-radius: 999px;
+    font-size: 10px; border: 1px solid; line-height: 1.6;
+  }
+  .pill.activity  { background: var(--activity-fill);  border-color: var(--activity-stroke);  color: var(--activity-stroke); }
+  .pill.milestone { background: var(--milestone-fill); border-color: var(--milestone-stroke); color: var(--milestone-stroke); }
+  .pill.external  { background: var(--external-fill);  border-color: var(--external-stroke);  color: var(--external-stroke); }
+  .pill.critical  { background: var(--critical-fill);  border-color: var(--critical-stroke);  color: var(--critical-stroke); }
+  .pill.near      { background: var(--near-fill);      border-color: var(--near-stroke);      color: var(--near-stroke); }
+
+  .muted { color: var(--text-muted); }
+  .mono { font-family: var(--font-mono); }
+
+  details.prompt { margin-top: 10px; }
+  details.prompt summary { cursor: pointer; color: var(--accent); font-size: 12px; }
+  pre.prompt-body {
+    background: var(--surface-alt); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; font-family: var(--font-mono);
+    font-size: 11.5px; white-space: pre-wrap; margin: 8px 0 0;
+    max-height: 320px; overflow: auto;
+  }
+
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .03em; }
+
+  .kpi { display: flex; gap: 18px; flex-wrap: wrap; }
+  .kpi div { display: flex; flex-direction: column; }
+  .kpi .v { font-size: 18px; font-family: var(--font-mono); }
+  .kpi .l { font-size: 11px; color: var(--text-muted); }
+
+  footer { padding: 14px 18px; color: var(--text-muted); font-size: 11px;
+           max-width: 1180px; margin: 0 auto; }
+
+
+  /* ---------- barra strumenti delle viste ---------- */
+  .toolbar {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 12px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px;
+  }
+  .toolbar .sep { width: 1px; height: 20px; background: var(--border); }
+  .seg { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .seg button {
+    font: inherit; font-size: 12px; padding: 4px 10px; cursor: pointer;
+    background: var(--surface); color: var(--text-muted); border: none;
+    border-right: 1px solid var(--border);
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+  .filter-note {
+    padding: 7px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 12px;
+    background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn);
+  }
+
+  /* ---------- reticolo ---------- */
+  .canvas-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; overflow: auto; position: relative; max-height: 74vh;
+  }
+  .net { position: relative; }
+  .net svg { position: absolute; inset: 0; pointer-events: none; }
+  .net .edge { fill: none; stroke: var(--border); stroke-width: 1.3; }
+  .net .edge.crit { stroke: var(--critical-stroke); stroke-width: 2; }
+  .net .edge.disc { stroke-dasharray: 4 3; }
+  .net .edge-label {
+    font-family: var(--font-mono); font-size: 9px; fill: var(--text-muted);
+  }
+
+  .node {
+    position: absolute; border: 1.5px solid var(--activity-stroke);
+    background: var(--activity-fill); border-radius: 6px; overflow: hidden;
+    display: grid; grid-template-rows: 18px 1fr 18px; cursor: default;
+  }
+  .node.milestone { border-color: var(--milestone-stroke); background: var(--milestone-fill); }
+  .node.external  { border-color: var(--external-stroke);  background: var(--external-fill); }
+  .node.crit      { border-color: var(--critical-stroke);  background: var(--critical-fill); border-width: 2px; }
+  .node.near      { border-color: var(--near-stroke);      background: var(--near-fill); }
+  .node.dim       { opacity: .22; }
+  .node .cells {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    font-family: var(--font-mono); font-size: 10px; text-align: center;
+    border-bottom: 1px solid rgba(128,128,128,.32);
+  }
+  .node .cells.bottom { border-bottom: none; border-top: 1px solid rgba(128,128,128,.32); }
+  .node .cells span { padding: 1px 0; border-right: 1px solid rgba(128,128,128,.22); }
+  .node .cells span:last-child { border-right: none; }
+  .node .title {
+    padding: 3px 6px; font-size: 11px; line-height: 1.25; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+  }
+  .node .manual {
+    position: absolute; top: 2px; right: 3px; font-size: 9px;
+    color: var(--accent); font-family: var(--font-mono);
+  }
+  .net.editing .node { cursor: pointer; }
+  .net.editing .node:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .node.sel { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  /* ---------- gantt ---------- */
+  .gantt { display: grid; grid-template-columns: 300px 1fr; min-width: 100%; }
+  .gantt .left, .gantt .right { min-width: 0; }
+  .grow { position: relative; height: 26px; border-bottom: 1px solid var(--border-soft); }
+  .grow.group { background: var(--surface-alt); font-weight: 600; }
+  .glabel {
+    display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px;
+    font-size: 12px; border-bottom: 1px solid var(--border-soft);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .glabel.group { background: var(--surface-alt); font-weight: 600; }
+  .glabel .gid { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+  .ghead { height: 34px; border-bottom: 1px solid var(--border); position: relative; }
+  .gtick {
+    position: absolute; top: 0; height: 34px; font-size: 10px; color: var(--text-muted);
+    border-left: 1px solid var(--border-soft); padding: 3px 0 0 4px;
+    font-family: var(--font-mono); white-space: nowrap; overflow: hidden;
+  }
+  .gband { position: absolute; top: 0; bottom: 0; background: var(--surface-alt); }
+  .gbar {
+    position: absolute; top: 5px; height: 16px; border-radius: 3px;
+    background: var(--activity-fill); border: 1.5px solid var(--activity-stroke);
+  }
+  .gbar.crit { background: var(--critical-fill); border-color: var(--critical-stroke); }
+  .gbar.near { background: var(--near-fill); border-color: var(--near-stroke); }
+  .gbar.buffer { background: repeating-linear-gradient(45deg,
+      var(--warn-soft), var(--warn-soft) 5px, transparent 5px, transparent 10px);
+      border-color: var(--warn); border-style: dashed; }
+  .gms {
+    position: absolute; top: 7px; width: 12px; height: 12px;
+    background: var(--milestone-fill); border: 1.5px solid var(--milestone-stroke);
+    transform: rotate(45deg);
+  }
+  .gms.ext { background: var(--external-fill); border-color: var(--external-stroke); }
+  .gms.crit { background: var(--critical-fill); border-color: var(--critical-stroke); }
+  .gfloat { position: absolute; top: 12px; height: 2px; background: var(--border); }
+  .gmslabel {
+    position: absolute; top: 6px; font-size: 10px; color: var(--text-muted);
+    white-space: nowrap; font-family: var(--font-mono);
+  }
+  .editing .gbar { cursor: pointer; }
+  .editing .gbar:hover { filter: brightness(.94); outline: 2px solid var(--accent); }
+
+  /* ---------- modale ---------- */
+  .modal-back {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    display: flex; align-items: center; justify-content: center; z-index: 90; padding: 16px;
+  }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; max-width: 520px; width: 100%; max-height: 86vh; overflow: auto;
+  }
+  .modal h2 { margin-bottom: 8px; }
+  .modal ul { margin: 8px 0; padding-left: 20px; font-size: 12px; }
+
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px;
+            color: var(--text-muted); margin-top: 10px; }
+  .legend i { display: inline-block; width: 11px; height: 11px; border: 1.5px solid;
+              border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+
+  .hist-item { border-bottom: 1px solid var(--border-soft); padding: 10px 0; }
+  .hist-item:last-child { border-bottom: none; }
+
+  @media (max-width: 620px) {
+    main { padding: 12px; }
+    .card { padding: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">Pianificazione di progetto<small id="projName">nessun piano caricato</small></div>
+  <nav class="nav" role="tablist">
+    <button id="navPlan" aria-current="true">Piano</button>
+    <button id="navNet" disabled>Reticolo</button>
+    <button id="navGantt" disabled>Gantt</button>
+    <button id="navArch" disabled>Archivio</button>
+  </nav>
+  <div class="topbar-right">
+    <span class="rev" id="revLabel">rev 0</span>
+    <button class="btn quiet" id="btnUndo" title="Annulla" disabled>&#8630;</button>
+    <button class="btn quiet" id="btnRedo" title="Ripristina" disabled>&#8631;</button>
+    <button class="btn" id="btnConfig">Configurazione</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ SCHERMO PIANO ============ -->
+<section id="scrPlan">
+
+  <div class="steps" id="stepChips"></div>
+
+  <div class="card" id="stepPanel">
+    <h2 id="stepTitle"></h2>
+    <p class="lede" id="stepLede"></p>
+
+    <details class="prompt" id="promptBox">
+      <summary>Mostra la richiesta da usare nell'assistente AI</summary>
+      <pre class="prompt-body" id="promptText"></pre>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="btnCopyPrompt">Copia richiesta</button>
+        <span class="muted" id="copyNote"></span>
+      </div>
+    </details>
+
+    <h3 style="margin-top:16px">Risposta dell'assistente AI</h3>
+    <textarea id="pasteBox" placeholder="Incolla qui la risposta. Il testo attorno al JSON viene ignorato."></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="btn primary" id="btnCheck">Verifica</button>
+      <button class="btn" id="btnApprove" disabled>Approva passaggio</button>
+      <div class="spacer"></div>
+      <button class="btn quiet" id="btnClearPaste">Svuota</button>
+    </div>
+    <div class="diag" id="diag"></div>
+  </div>
+
+  <div class="card" id="resultCard" hidden>
+    <h3>Piano approvato</h3>
+    <div id="resultBody"></div>
+  </div>
+
+</section>
+
+<!-- ============ CONFIGURAZIONE ============ -->
+<section id="scrConfig" hidden>
+  <div class="card">
+    <h2>Configurazione</h2>
+    <p class="lede">Parametri che non fanno parte del piano prodotto dall'assistente AI.
+      Modificarli ricalcola, non invalida i passaggi approvati.</p>
+
+    <div class="grid2">
+      <div class="field">
+        <label for="cfgStart">Avvio del progetto</label>
+        <input type="date" id="cfgStart">
+      </div>
+      <div class="field">
+        <label for="cfgImposed">Fine imposta (facoltativa)</label>
+        <input type="date" id="cfgImposed">
+      </div>
+      <div class="field">
+        <label for="cfgNear">Soglia quasi critico (giorni)</label>
+        <input type="number" id="cfgNear" min="0" max="30" value="3">
+      </div>
+      <div class="field">
+        <label for="cfgIter">Iterazioni della simulazione</label>
+        <input type="number" id="cfgIter" min="200" max="20000" step="100" value="2000">
+      </div>
+    </div>
+
+    <h3 style="margin-top:18px">Festività</h3>
+    <p class="muted" style="margin:0 0 6px">Una data ISO per riga, formato aaaa-mm-gg.</p>
+    <textarea id="cfgHolidays" style="min-height:90px"></textarea>
+
+    <h3 style="margin-top:18px">Disponibilità dei contributori</h3>
+    <p class="muted" style="margin:0 0 6px">La data di ciascun contributore vive solo qui.
+      I vincoli esterni la ereditano: cambiarla propaga a tutto il piano.</p>
+    <div id="cfgContributors"><p class="muted">Nessun contributore: compare dopo il passaggio 2.</p></div>
+
+    <div class="row" style="margin-top:16px">
+      <button class="btn primary" id="btnSaveCfg">Applica</button>
+      <button class="btn quiet" id="btnCloseCfg">Chiudi</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============ RETICOLO ============ -->
+<section id="scrNet" hidden>
+  <div class="toolbar">
+    <strong style="font-size:13px">Reticolo</strong>
+    <span class="muted" id="netSub"></span>
+    <div class="sep"></div>
+    <label class="muted" for="netFilter">Mostra</label>
+    <select id="netFilter">
+      <option value="all">tutto il piano</option>
+      <option value="crit">solo percorso critico</option>
+      <option value="critnear">critico e quasi critico</option>
+      <option value="ms">solo milestone e vincoli</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="btn" id="netEdit">Modifica</button>
+    <button class="btn" id="netExportSvg">Esporta immagine</button>
+  </div>
+  <div id="netFilterNote"></div>
+  <div class="canvas-wrap"><div class="net" id="netCanvas"></div></div>
+  <div class="legend">
+    <span><i style="background:var(--activity-fill);border-color:var(--activity-stroke)"></i>attività</span>
+    <span><i style="background:var(--milestone-fill);border-color:var(--milestone-stroke)"></i>milestone</span>
+    <span><i style="background:var(--external-fill);border-color:var(--external-stroke)"></i>vincolo esterno</span>
+    <span><i style="background:var(--critical-fill);border-color:var(--critical-stroke)"></i>critica</span>
+    <span><i style="background:var(--near-fill);border-color:var(--near-stroke)"></i>quasi critica</span>
+    <span>tratteggio: legame discrezionale</span>
+  </div>
+</section>
+
+<!-- ============ GANTT ============ -->
+<section id="scrGantt" hidden>
+  <div class="toolbar">
+    <strong style="font-size:13px">Gantt</strong>
+    <div class="seg" id="scaleSeg">
+      <button data-scale="day">Giorni</button>
+      <button data-scale="week" aria-pressed="true">Settimane</button>
+      <button data-scale="month">Mesi</button>
+    </div>
+    <div class="sep"></div>
+    <label class="muted" for="ganttFilter">Mostra</label>
+    <select id="ganttFilter">
+      <option value="all">tutto il piano</option>
+      <option value="crit">solo percorso critico</option>
+      <option value="critnear">critico e quasi critico</option>
+      <option value="ms">solo milestone e vincoli</option>
+    </select>
+    <select id="ownerFilter"><option value="">ogni responsabile</option></select>
+    <div class="spacer"></div>
+    <button class="btn" id="ganttEdit">Modifica</button>
+    <button class="btn" id="btnBuffer">Riserva</button>
+    <button class="btn" id="btnSim">Simula</button>
+  </div>
+  <div id="ganttFilterNote"></div>
+  <div class="card" style="padding:12px">
+    <div class="kpi" id="ganttKpi"></div>
+    <div id="simBox"></div>
+  </div>
+  <div class="canvas-wrap"><div id="ganttCanvas"></div></div>
+</section>
+
+<!-- ============ ARCHIVIO ED ESPORTAZIONI ============ -->
+<section id="scrArchive" hidden>
+  <div class="card">
+    <h2>Esportazioni</h2>
+    <p class="lede">L'HTML condivide, il JSON conserva. L'HTML esportato congela anche
+      l'applicazione: per riprendere il piano in una versione aggiornata serve il JSON.</p>
+    <div class="row">
+      <button class="btn primary" id="expHtml">Scarica HTML aggiornato</button>
+      <button class="btn" id="expJson">Scarica JSON del piano</button>
+      <button class="btn" id="expReport">Scarica relazione leggibile</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Archivio dei passaggi</h2>
+    <p class="lede">I frammenti approvati, così come sono arrivati dall'assistente AI.</p>
+    <div id="histBody"></div>
+  </div>
+  <div class="card">
+    <h2>Ripristino</h2>
+    <p class="lede">Riporta il piano ai frammenti approvati, scartando ogni modifica
+      manuale. È distruttivo e non annullabile.</p>
+    <button class="btn danger" id="btnRestore">Ripristina piano originario</button>
+  </div>
+</section>
+
+<div id="modalHost"></div>
+
+</main>
+
+<footer id="footNote"></footer>
+
+<script>
+/* ============================================================
+   CPM CORE START  —  identico al modulo verificato con test
+   ============================================================ */
+
+function parseISO(s){const[y,m,d]=s.split('-').map(Number);return new Date(Date.UTC(y,m-1,d));}
+function toISO(dt){return dt.toISOString().slice(0,10);}
+function isWeekend(dt){const g=dt.getUTCDay();return g===0||g===6;}
+
+function makeCalendar(startISO, holidays){
+  const holiSet=new Set(holidays||[]);
+  const start=parseISO(startISO);
+  function isWorking(dt){return !isWeekend(dt)&&!holiSet.has(toISO(dt));}
+  let cursor=new Date(start.getTime()),guard=0;
+  while(!isWorking(cursor)&&guard++<3650) cursor=new Date(cursor.getTime()+86400000);
+  const origin=cursor,cache=[];
+  function dateOfIndex(i){
+    if(i<0)i=0;
+    if(cache.length===0)cache.push(new Date(origin.getTime()));
+    while(cache.length<=i){
+      let d=new Date(cache[cache.length-1].getTime()+86400000),g=0;
+      while(!isWorking(d)&&g++<3650)d=new Date(d.getTime()+86400000);
+      cache.push(d);
+    }
+    return cache[i];
+  }
+  function indexOfDate(iso){
+    const target=parseISO(iso);
+    if(target<=origin)return 0;
+    let i=0; while(dateOfIndex(i)<target&&i<20000)i++;
+    return i;
+  }
+  return {dateOfIndex,indexOfDate,isWorking,originISO:toISO(origin)};
+}
+
+function topoSort(tasks,links){
+  const indeg=new Map(),out=new Map();
+  tasks.forEach(t=>{indeg.set(t.id,0);out.set(t.id,[]);});
+  for(const l of links){
+    if(!indeg.has(l.from)||!indeg.has(l.to))continue;
+    out.get(l.from).push(l.to); indeg.set(l.to,indeg.get(l.to)+1);
+  }
+  const queue=[]; indeg.forEach((v,k)=>{if(v===0)queue.push(k);});
+  const order=[];
+  while(queue.length){
+    const id=queue.shift(); order.push(id);
+    for(const nxt of out.get(id)){
+      indeg.set(nxt,indeg.get(nxt)-1);
+      if(indeg.get(nxt)===0)queue.push(nxt);
+    }
+  }
+  if(order.length===tasks.length)return {order,cycle:null};
+  const remaining=new Set(tasks.map(t=>t.id).filter(id=>!order.includes(id)));
+  const path=[],onPath=new Set(); let found=null;
+  function dfs(id){
+    if(found)return;
+    if(onPath.has(id)){found=path.slice(path.indexOf(id)).concat([id]);return;}
+    if(!remaining.has(id))return;
+    onPath.add(id);path.push(id);
+    for(const nxt of out.get(id)||[])dfs(nxt);
+    onPath.delete(id);path.pop();
+  }
+  for(const id of remaining){dfs(id);if(found)break;}
+  return {order,cycle:found};
+}
+
+function reachability(tasks,links){
+  const fwd=new Map(),bwd=new Map();
+  tasks.forEach(t=>{fwd.set(t.id,[]);bwd.set(t.id,[]);});
+  for(const l of links){
+    if(!fwd.has(l.from)||!fwd.has(l.to))continue;
+    fwd.get(l.from).push(l.to); bwd.get(l.to).push(l.from);
+  }
+  function walk(map,seed){
+    const seen=new Set([seed]),stack=[seed];
+    while(stack.length){const id=stack.pop();
+      for(const n of map.get(id)||[])if(!seen.has(n)){seen.add(n);stack.push(n);}}
+    return seen;
+  }
+  return {fromStart:walk(fwd,'START'),toEnd:walk(bwd,'END')};
+}
+
+function esFromLink(link,predES,predEF,succDur){
+  const lag=link.lag||0;
+  switch(link.type){
+    case 'FS':return predEF+lag;
+    case 'SS':return predES+lag;
+    case 'FF':return predEF+lag-succDur;
+    case 'SF':return predES+lag-succDur;
+    default:  return predEF+lag;
+  }
+}
+function lfFromLink(link,succLS,succLF,predDur){
+  const lag=link.lag||0;
+  switch(link.type){
+    case 'FS':return succLS-lag;
+    case 'SS':return succLS-lag+predDur;
+    case 'FF':return succLF-lag;
+    case 'SF':return succLF-lag+predDur;
+    default:  return succLS-lag;
+  }
+}
+
+function computeCPM(plan,opts){
+  opts=opts||{};
+  const threshold=opts.nearCriticalThreshold!=null?opts.nearCriticalThreshold:3;
+  const tasks=plan.tasks,links=plan.links;
+  const dur=id=>(plan.durations&&plan.durations[id])||0;
+  const constraintOf=id=>(plan.constraints&&plan.constraints[id]!=null)?plan.constraints[id]:null;
+  const errors=[],byId=new Map(tasks.map(t=>[t.id,t]));
+
+  for(const l of links){
+    if(!byId.has(l.from))errors.push({code:'LINK_FROM_MISSING',id:l.from,link:l});
+    if(!byId.has(l.to))  errors.push({code:'LINK_TO_MISSING',id:l.to,link:l});
+  }
+  if(!byId.has('START'))errors.push({code:'START_MISSING'});
+  if(!byId.has('END'))  errors.push({code:'END_MISSING'});
+
+  const {order,cycle}=topoSort(tasks,links);
+  if(cycle){errors.push({code:'CYCLE',path:cycle});return {errors,ok:false};}
+  if(errors.length)return {errors,ok:false};
+
+  const reach=reachability(tasks,links),warnings=[];
+  for(const t of tasks){
+    if(!reach.fromStart.has(t.id))warnings.push({code:'UNREACHABLE_FROM_START',id:t.id});
+    if(!reach.toEnd.has(t.id))    warnings.push({code:'DOES_NOT_REACH_END',id:t.id});
+  }
+
+  const preds=new Map(tasks.map(t=>[t.id,[]])),succs=new Map(tasks.map(t=>[t.id,[]]));
+  for(const l of links){preds.get(l.to).push(l);succs.get(l.from).push(l);}
+
+  const ES={},EF={};
+  for(const id of order){
+    const d=dur(id); let es=0;
+    for(const l of preds.get(id)){
+      const cand=esFromLink(l,ES[l.from],EF[l.from],d);
+      if(cand>es)es=cand;
+    }
+    const c=constraintOf(id);
+    if(c!=null&&c>es)es=c;
+    if(es<0)es=0;
+    ES[id]=es; EF[id]=es+d;
+  }
+
+  const calcEnd=EF['END'];
+  const projectEnd=(opts.imposedEndDay!=null)?opts.imposedEndDay:calcEnd;
+
+  const LS={},LF={};
+  for(let i=order.length-1;i>=0;i--){
+    const id=order[i],d=dur(id),ss=succs.get(id);
+    let lf;
+    if(ss.length===0){lf=projectEnd;}
+    else{lf=Infinity;
+      for(const l of ss){const cand=lfFromLink(l,LS[l.to],LF[l.to],d);if(cand<lf)lf=cand;}}
+    if(id==='END')lf=projectEnd;
+    LF[id]=lf; LS[id]=lf-d;
+  }
+
+  const TF={},FF={};
+  for(const t of tasks){
+    TF[t.id]=LS[t.id]-ES[t.id];
+    const ss=succs.get(t.id);
+    if(ss.length===0){FF[t.id]=projectEnd-EF[t.id];}
+    else{let m=Infinity;
+      for(const l of ss){
+        const need=esFromLink(l,ES[t.id],EF[t.id],dur(l.to));
+        m=Math.min(m,ES[l.to]-need);
+      }
+      FF[t.id]=m;}
+    if(FF[t.id]<0)FF[t.id]=0;
+  }
+
+  const minTF=Math.min(...tasks.map(t=>TF[t.id]));
+  const critical={},nearCritical={},hypercritical={};
+  for(const t of tasks){
+    critical[t.id]=TF[t.id]===minTF&&minTF<=0?true:TF[t.id]===0;
+    hypercritical[t.id]=TF[t.id]<0;
+    nearCritical[t.id]=!critical[t.id]&&!hypercritical[t.id]&&TF[t.id]<=threshold;
+  }
+
+  let variance=0;
+  for(const t of tasks){
+    if(!critical[t.id]&&!hypercritical[t.id])continue;
+    const e=plan.threePoint&&plan.threePoint[t.id];
+    if(e){const sd=(e.pessimistic-e.optimistic)/6;variance+=sd*sd;}
+  }
+
+  return {ok:true,errors:[],warnings,ES,EF,LS,LF,TF,FF,
+    critical,nearCritical,hypercritical,
+    calculatedEndDay:calcEnd,projectEndDay:projectEnd,
+    minTotalFloat:minTF,criticalPathStdDev:Math.sqrt(variance),order};
+}
+
+
+/* ---------- simulazione Monte Carlo ---------- */
+
+function triangularSample(o, m, p, rnd) {
+  if (p === o) return o;
+  const f = (m - o) / (p - o);
+  const u = rnd();
+  return u < f
+    ? o + Math.sqrt(u * (p - o) * (m - o))
+    : p - Math.sqrt((1 - u) * (p - o) * (p - m));
+}
+
+function simulate(plan, opts, iterations, seed) {
+  iterations = iterations || 2000;
+  let s = seed || 123456789;
+  const rnd = () => {
+    s ^= s << 13; s ^= s >>> 17; s ^= s << 5;
+    return ((s >>> 0) % 1000000) / 1000000;
+  };
+  const ends = [], critCount = {};
+  plan.tasks.forEach(t => { critCount[t.id] = 0; });
+
+  for (let i = 0; i < iterations; i++) {
+    const durations = Object.assign({}, plan.durations);
+    if (plan.threePoint) {
+      for (const id in plan.threePoint) {
+        const e = plan.threePoint[id];
+        durations[id] = Math.max(0, Math.round(
+          triangularSample(e.optimistic, e.mostLikely, e.pessimistic, rnd)));
+      }
+    }
+    const r = computeCPM(Object.assign({}, plan, { durations }), opts);
+    if (!r.ok) continue;
+    ends.push(r.calculatedEndDay);
+    plan.tasks.forEach(t => { if (r.critical[t.id]) critCount[t.id]++; });
+  }
+
+  ends.sort((a, b) => a - b);
+  const pct = q => ends.length ? ends[Math.min(ends.length - 1, Math.floor(q * ends.length))] : null;
+  const criticalityIndex = {};
+  plan.tasks.forEach(t => { criticalityIndex[t.id] = ends.length ? critCount[t.id] / ends.length : 0; });
+
+  return { iterations: ends.length, p50: pct(0.5), p80: pct(0.8), p90: pct(0.9),
+    min: ends[0], max: ends[ends.length - 1], distribution: ends, criticalityIndex };
+}
+
+/* CPM CORE END */
+
+/* ============================================================
+   LAYOUT CORE START
+   Layout a livelli per il diagramma di precedenza (AON).
+   Sugiyama semplificato: rango per cammino piu' lungo,
+   ordinamento per baricentro, coordinate su griglia.
+   Nessuna dipendenza dal DOM.
+   ============================================================ */
+
+/* Rango = lunghezza del cammino piu' lungo da START.
+   Usa il cammino lungo e non la profondita' minima perche' altrimenti
+   un'attivita' finirebbe a sinistra di un suo predecessore. */
+function assignRanks(tasks, links, order) {
+  const rank = {};
+  tasks.forEach(t => { rank[t.id] = 0; });
+  const preds = new Map(tasks.map(t => [t.id, []]));
+  for (const l of links) if (preds.has(l.to)) preds.get(l.to).push(l.from);
+  for (const id of order) {
+    let r = 0;
+    for (const p of preds.get(id) || []) r = Math.max(r, (rank[p] || 0) + 1);
+    rank[id] = r;
+  }
+  // END sempre all'ultimo livello, anche se ha rami corti
+  if (rank['END'] !== undefined) {
+    const maxR = Math.max(...Object.values(rank));
+    rank['END'] = maxR;
+  }
+  return rank;
+}
+
+/* Ordinamento dentro ciascun livello con euristica del baricentro.
+   Alterna passate avanti e indietro finche' gli incroci non calano. */
+function orderWithinLayers(layers, links, iterations) {
+  iterations = iterations || 6;
+  const preds = {}, succs = {};
+  for (const l of links) {
+    (succs[l.from] = succs[l.from] || []).push(l.to);
+    (preds[l.to] = preds[l.to] || []).push(l.from);
+  }
+
+  const posOf = () => {
+    const p = {};
+    layers.forEach(layer => layer.forEach((id, i) => { p[id] = i; }));
+    return p;
+  };
+
+  function barycenter(id, neighbours, pos) {
+    const ns = (neighbours[id] || []).filter(n => pos[n] !== undefined);
+    if (ns.length === 0) return null;
+    return ns.reduce((a, n) => a + pos[n], 0) / ns.length;
+  }
+
+  for (let it = 0; it < iterations; it++) {
+    const down = it % 2 === 0;
+    const pos = posOf();
+    const range = down ? layers.map((_, i) => i) : layers.map((_, i) => layers.length - 1 - i);
+    for (const li of range) {
+      const layer = layers[li];
+      const neigh = down ? preds : succs;
+      const keyed = layer.map((id, i) => {
+        const b = barycenter(id, neigh, pos);
+        return { id, key: b === null ? i : b, i };
+      });
+      keyed.sort((a, b) => a.key - b.key || a.i - b.i);
+      layers[li] = keyed.map(k => k.id);
+    }
+  }
+  return layers;
+}
+
+function countCrossings(layers, links) {
+  const pos = {};
+  layers.forEach(layer => layer.forEach((id, i) => { pos[id] = i; }));
+  const layerOf = {};
+  layers.forEach((layer, li) => layer.forEach(id => { layerOf[id] = li; }));
+
+  let crossings = 0;
+  for (let li = 0; li < layers.length - 1; li++) {
+    const segs = links
+      .filter(l => layerOf[l.from] === li && layerOf[l.to] === li + 1)
+      .map(l => [pos[l.from], pos[l.to]]);
+    for (let a = 0; a < segs.length; a++)
+      for (let b = a + 1; b < segs.length; b++)
+        if ((segs[a][0] - segs[b][0]) * (segs[a][1] - segs[b][1]) < 0) crossings++;
+  }
+  return crossings;
+}
+
+/* Layout completo.
+   metrics = { nodeW, nodeH, gapX, gapY, padding } */
+function layoutNetwork(tasks, links, order, metrics) {
+  const m = Object.assign({ nodeW: 168, nodeH: 78, gapX: 68, gapY: 26, padding: 24 }, metrics || {});
+
+  const rank = assignRanks(tasks, links, order);
+  const maxRank = Math.max(0, ...Object.values(rank));
+
+  let layers = [];
+  for (let i = 0; i <= maxRank; i++) layers.push([]);
+  // ordine iniziale stabile: quello topologico
+  for (const id of order) layers[rank[id]].push(id);
+
+  const before = countCrossings(layers, links);
+  layers = orderWithinLayers(layers, links, 8);
+  const after = countCrossings(layers, links);
+
+  const nodes = {};
+  layers.forEach((layer, li) => {
+    layer.forEach((id, i) => {
+      nodes[id] = {
+        id,
+        rank: li,
+        index: i,
+        x: m.padding + li * (m.nodeW + m.gapX),
+        y: m.padding + i * (m.nodeH + m.gapY),
+        w: m.nodeW,
+        h: m.nodeH
+      };
+    });
+  });
+
+  // centra verticalmente ogni livello rispetto al piu' alto
+  const tallest = Math.max(...layers.map(l => l.length));
+  layers.forEach((layer, li) => {
+    const offset = ((tallest - layer.length) * (m.nodeH + m.gapY)) / 2;
+    layer.forEach(id => { nodes[id].y += offset; });
+  });
+
+  const width = m.padding * 2 + (maxRank + 1) * m.nodeW + maxRank * m.gapX;
+  const height = m.padding * 2 + tallest * m.nodeH + Math.max(0, tallest - 1) * m.gapY;
+
+  return { nodes, layers, width, height, rank,
+           crossingsBefore: before, crossingsAfter: after, metrics: m };
+}
+
+/* Percorso ortogonale fra due nodi.
+   Esce a destra del predecessore, entra a sinistra del successore.
+   Se il salto e' di piu' di un livello, aggira passando sopra o sotto. */
+function edgePath(from, to, metrics, laneOffset) {
+  const gap = metrics.gapX;
+  const x1 = from.x + from.w, y1 = from.y + from.h / 2;
+  const x2 = to.x,            y2 = to.y + to.h / 2;
+
+  if (x2 <= x1) {
+    // legame all'indietro: aggira sopra i nodi
+    const up = Math.min(from.y, to.y) - 18 - (laneOffset || 0) * 8;
+    return ['M', x1, y1, 'H', x1 + 14, 'V', up, 'H', x2 - 14, 'V', y2, 'H', x2].join(' ');
+  }
+
+  const mid = x1 + Math.max(16, Math.min(gap / 2, (x2 - x1) / 2)) + (laneOffset || 0) * 7;
+  if (Math.abs(y1 - y2) < 1) return ['M', x1, y1, 'H', x2].join(' ');
+  return ['M', x1, y1, 'H', mid, 'V', y2, 'H', x2].join(' ');
+}
+
+/* LAYOUT CORE END */
+
+
+
+
+/* ============================================================
+   STATO
+   ============================================================ */
+
+const STORAGE_KEY = 'piano-predittivo-v1';
+
+const state = {
+  project: null,
+  wbs: null,            // step 1
+  tasks: null,          // step 2
+  contributors: null,
+  links: null,          // step 3
+  estimates: null,      // step 4
+  approved: {},         // step -> { at, user, revision }
+  fragments: {},        // step -> frammento originale, non rigenerato
+  openQuestions: {},    // step -> array
+  config: {
+    start: '',
+    imposedEnd: '',
+    holidays: [],
+    nearThreshold: 3,
+    iterations: 2000,
+    availability: {}    // contributorId -> data ISO
+  },
+  revision: 0,
+  user: '',
+  storageOK: true,
+  manual: {},           // id o chiave -> revisione in cui e' stato toccato a mano
+  buffers: [],          // riserve di schedulazione dichiarate
+  baseline: null,       // istantanea al congelamento
+  view: { scale: 'week', netFilter: 'all', ganttFilter: 'all', owner: '' }
+};
+
+/* cronologia in memoria: non persiste, e' un annulla di sessione */
+const history = { past: [], future: [] };
+
+function snapshot() {
+  return JSON.stringify({
+    project: state.project, wbs: state.wbs, tasks: state.tasks,
+    contributors: state.contributors, links: state.links,
+    estimates: state.estimates, config: state.config,
+    manual: state.manual, buffers: state.buffers
+  });
+}
+
+function pushHistory() {
+  history.past.push(snapshot());
+  if (history.past.length > 60) history.past.shift();
+  history.future.length = 0;
+}
+
+function applySnapshot(snap) {
+  const d = JSON.parse(snap);
+  Object.assign(state, d);
+}
+
+function undo() {
+  if (!history.past.length) return;
+  history.future.push(snapshot());
+  applySnapshot(history.past.pop());
+  state.revision++;
+  saveState(); renderAll();
+}
+
+function redo() {
+  if (!history.future.length) return;
+  history.past.push(snapshot());
+  applySnapshot(history.future.pop());
+  state.revision++;
+  saveState(); renderAll();
+}
+
+function markManual(key) { state.manual[key] = state.revision; }
+
+function currentStep() {
+  for (let s = 1; s <= 4; s++) if (!state.approved[s]) return s;
+  return 5;
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    state.storageOK = true;
+  } catch (e) {
+    state.storageOK = false;
+  }
+  renderFootNote();
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    Object.assign(state, JSON.parse(raw));
+  } catch (e) { state.storageOK = false; }
+}
+
+
+/* ============================================================
+   PARSER TOLLERANTE
+   Estrae il primo oggetto JSON bilanciato dal testo, ignorando
+   preamboli, code e delimitatori markdown.
+   ============================================================ */
+
+function extractJSON(text) {
+  if (!text) return { error: 'Nessun testo da leggere.' };
+  const start = text.indexOf('{');
+  if (start < 0) return { error: 'Non ho trovato nessun oggetto JSON nel testo.' };
+
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (inStr) {
+      if (esc) { esc = false; }
+      else if (ch === '\\') { esc = true; }
+      else if (ch === '"') { inStr = false; }
+      continue;
+    }
+    if (ch === '"') { inStr = true; continue; }
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) {
+        const slice = text.slice(start, i + 1);
+        try { return { value: JSON.parse(slice) }; }
+        catch (e) { return { error: 'Il JSON trovato non è valido: ' + e.message }; }
+      }
+    }
+  }
+  return { error: 'Il JSON sembra troncato: mancano parentesi di chiusura. ' +
+                  'Chiedi il seguito e incolla anche quello.' };
+}
+
+
+/* ============================================================
+   VALIDATORI
+   Ogni validatore ritorna { errors: [], warnings: [], data }
+   ============================================================ */
+
+const FORBIDDEN_FIELDS = ['start','end','startDate','endDate','ES','EF','LS','LF',
+  'float','totalFloat','freeFloat','critical','criticalPath','pertStdDev','baseline'];
+
+function scanForbidden(obj, path, out) {
+  if (obj === null || typeof obj !== 'object') return;
+  if (Array.isArray(obj)) { obj.forEach((v, i) => scanForbidden(v, path + '[' + i + ']', out)); return; }
+  for (const k in obj) {
+    if (FORBIDDEN_FIELDS.includes(k)) out.push({ path: path + '.' + k, field: k });
+    scanForbidden(obj[k], path + '.' + k, out);
+  }
+}
+
+const DATE_RE = /\b(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4})\b/;
+
+function checkHeader(frag, expectedStep) {
+  const e = [];
+  if (frag.step !== expectedStep)
+    e.push('Questo frammento dichiara step ' + JSON.stringify(frag.step) +
+           ', ma il passaggio atteso è ' + expectedStep + '.');
+  if (frag.methodology && frag.methodology !== 'predittivo')
+    e.push('Metodologia "' + frag.methodology + '" non compatibile con questo piano.');
+  return e;
+}
+
+function commonScan(frag) {
+  const errors = [], warnings = [];
+  const forb = [];
+  scanForbidden(frag, 'root', forb);
+  for (const f of forb)
+    warnings.push('Campo vietato rimosso: <code>' + f.path + '</code>. ' +
+                  'È un valore che calcola l\'applicazione.');
+  // date in testo libero
+  const strings = [];
+  (function walk(o) {
+    if (typeof o === 'string') { strings.push(o); return; }
+    if (o && typeof o === 'object') Object.values(o).forEach(walk);
+  })(frag);
+  for (const s of strings) {
+    if (DATE_RE.test(s)) {
+      warnings.push('Una data compare in testo libero: <code>' +
+        escapeHTML(s.slice(0, 70)) + '</code>. Le date le calcola l\'applicazione.');
+      break;
+    }
+  }
+  return { errors, warnings };
+}
+
+function stripForbidden(obj) {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(stripForbidden);
+  const out = {};
+  for (const k in obj) {
+    if (FORBIDDEN_FIELDS.includes(k)) continue;
+    out[k] = stripForbidden(obj[k]);
+  }
+  return out;
+}
+
+/* ---------- step 1: WBS ---------- */
+function validateStep1(frag) {
+  const errors = [], warnings = [];
+  errors.push(...checkHeader(frag, 1));
+  const c = commonScan(frag); warnings.push(...c.warnings);
+
+  if (!frag.project || !frag.project.name)
+    errors.push('Manca <code>project.name</code>.');
+  if (!Array.isArray(frag.wbs) || frag.wbs.length === 0)
+    { errors.push('Manca l\'array <code>wbs</code>, oppure è vuoto.'); return { errors, warnings }; }
+
+  const codes = new Set(), dup = new Set();
+  for (const w of frag.wbs) {
+    if (!w.code) { errors.push('Un elemento WBS è privo di <code>code</code>.'); continue; }
+    if (codes.has(w.code)) dup.add(w.code);
+    codes.add(w.code);
+    if (!w.name) errors.push('Elemento <code>' + escapeHTML(w.code) + '</code> privo di nome.');
+  }
+  for (const d of dup) errors.push('Codice WBS duplicato: <code>' + escapeHTML(d) + '</code>.');
+
+  const roots = frag.wbs.filter(w => w.parent === null || w.parent === undefined);
+  if (roots.length === 0) errors.push('Nessun elemento radice: serve un elemento con <code>parent: null</code>.');
+  if (roots.length > 1) errors.push('Radici multiple (' +
+    roots.map(r => r.code).join(', ') + '): la WBS deve avere una sola radice.');
+
+  for (const w of frag.wbs) {
+    if (w.parent === null || w.parent === undefined) continue;
+    if (!codes.has(w.parent))
+      errors.push('<code>' + escapeHTML(w.code) + '</code> dichiara il padre <code>' +
+        escapeHTML(w.parent) + '</code>, che non esiste.');
+    else if (w.code.lastIndexOf('.') > 0 && w.code.slice(0, w.code.lastIndexOf('.')) !== w.parent)
+      warnings.push('<code>' + escapeHTML(w.code) + '</code>: il codice suggerisce il padre <code>' +
+        escapeHTML(w.code.slice(0, w.code.lastIndexOf('.'))) + '</code> ma è dichiarato <code>' +
+        escapeHTML(w.parent) + '</code>.');
+  }
+
+  return { errors, warnings, data: {
+    project: stripForbidden(frag.project), wbs: stripForbidden(frag.wbs) } };
+}
+
+/* ---------- step 2: attività ---------- */
+function validateStep2(frag) {
+  const errors = [], warnings = [];
+  errors.push(...checkHeader(frag, 2));
+  const c = commonScan(frag); warnings.push(...c.warnings);
+
+  if (!Array.isArray(frag.tasks) || frag.tasks.length === 0)
+    { errors.push('Manca l\'array <code>tasks</code>, oppure è vuoto.'); return { errors, warnings }; }
+
+  const wbsCodes = new Set(state.wbs.map(w => w.code));
+  const hasChildren = new Set(state.wbs.filter(w => w.parent).map(w => w.parent));
+  const contribIds = new Set((frag.contributors || []).map(x => x.id));
+
+  const ids = new Set(), dup = new Set();
+  for (const t of frag.tasks) {
+    if (!t.id) { errors.push('Un\'attività è priva di <code>id</code>.'); continue; }
+    if (ids.has(t.id)) dup.add(t.id);
+    ids.add(t.id);
+    if (!t.name) errors.push('<code>' + escapeHTML(t.id) + '</code>: manca il nome.');
+    if (!['activity','milestone','externalConstraint'].includes(t.type))
+      errors.push('<code>' + escapeHTML(t.id) + '</code>: tipo "' +
+        escapeHTML(String(t.type)) + '" non riconosciuto.');
+    if (!t.wbsId) errors.push('<code>' + escapeHTML(t.id) + '</code>: manca <code>wbsId</code>.');
+    else if (!wbsCodes.has(t.wbsId))
+      errors.push('<code>' + escapeHTML(t.id) + '</code>: <code>wbsId ' +
+        escapeHTML(t.wbsId) + '</code> non esiste nella WBS approvata.');
+    else if (hasChildren.has(t.wbsId) && t.id !== 'START' && t.id !== 'END')
+      errors.push('<code>' + escapeHTML(t.id) + '</code>: <code>' + escapeHTML(t.wbsId) +
+        '</code> non è un elemento foglia. Le attività si agganciano alle foglie.');
+
+    if (t.type === 'activity' && !t.completionCriteria)
+      errors.push('<code>' + escapeHTML(t.id) + '</code>: manca il criterio di completamento.');
+    if (t.type === 'externalConstraint') {
+      if (!t.contributor)
+        errors.push('<code>' + escapeHTML(t.id) + '</code>: vincolo esterno senza contributore.');
+      else if (!contribIds.has(t.contributor))
+        errors.push('<code>' + escapeHTML(t.id) + '</code>: contributore <code>' +
+          escapeHTML(t.contributor) + '</code> non dichiarato in <code>contributors</code>.');
+    } else if (!t.owner) {
+      errors.push('<code>' + escapeHTML(t.id) + '</code>: manca il responsabile.');
+    }
+  }
+  for (const d of dup) errors.push('Identificatore duplicato: <code>' + escapeHTML(d) + '</code>.');
+
+  if (!ids.has('START')) errors.push('Manca la milestone <code>START</code>.');
+  if (!ids.has('END'))   errors.push('Manca la milestone <code>END</code>.');
+
+  // avvisi
+  const used = new Set(frag.tasks.map(t => t.wbsId));
+  for (const w of state.wbs) {
+    if (hasChildren.has(w.code)) continue;
+    if (!used.has(w.code))
+      warnings.push('Il work package <code>' + escapeHTML(w.code) + ' ' + escapeHTML(w.name) +
+        '</code> non ha attività: un deliverable senza lavoro pianificato.');
+  }
+
+  return { errors, warnings, data: {
+    tasks: stripForbidden(frag.tasks),
+    contributors: stripForbidden(frag.contributors || [])
+  }};
+}
+
+/* ---------- step 3: sequenza ---------- */
+function validateStep3(frag) {
+  const errors = [], warnings = [];
+  errors.push(...checkHeader(frag, 3));
+  const c = commonScan(frag); warnings.push(...c.warnings);
+
+  if (!Array.isArray(frag.links) || frag.links.length === 0)
+    { errors.push('Manca l\'array <code>links</code>, oppure è vuoto.'); return { errors, warnings }; }
+
+  const ids = new Set(state.tasks.map(t => t.id));
+  for (const l of frag.links) {
+    const label = '<code>' + escapeHTML(String(l.from)) + ' → ' + escapeHTML(String(l.to)) + '</code>';
+    if (!ids.has(l.from)) errors.push(label + ': <code>' + escapeHTML(String(l.from)) + '</code> non esiste.');
+    if (!ids.has(l.to))   errors.push(label + ': <code>' + escapeHTML(String(l.to)) + '</code> non esiste.');
+    if (!['FS','SS','FF','SF'].includes(l.type))
+      errors.push(label + ': tipo "' + escapeHTML(String(l.type)) + '" non riconosciuto.');
+    if (typeof l.lag !== 'number') errors.push(label + ': <code>lag</code> mancante o non numerico.');
+    if (!['mandatory','discretionary'].includes(l.nature))
+      errors.push(label + ': <code>nature</code> deve essere mandatory o discretionary.');
+    if (!['internal','external'].includes(l.origin))
+      errors.push(label + ': <code>origin</code> deve essere internal o external.');
+    if (l.to === 'START') errors.push('<code>START</code> non può avere predecessori.');
+    if ((l.nature === 'discretionary' || l.lag) && !l.rationale)
+      warnings.push(label + ': legame discrezionale o con lag, ma senza motivazione.');
+  }
+  if (errors.length) return { errors, warnings };
+
+  const { cycle } = topoSort(state.tasks, frag.links);
+  if (cycle) {
+    errors.push('Dipendenza circolare: <code>' + cycle.map(escapeHTML).join(' → ') + '</code>.');
+    return { errors, warnings };
+  }
+
+  const reach = reachability(state.tasks, frag.links);
+  for (const t of state.tasks) {
+    if (t.id !== 'START' && !reach.fromStart.has(t.id))
+      errors.push('<code>' + escapeHTML(t.id) + '</code> non è raggiungibile da START.');
+    if (t.id !== 'END' && !reach.toEnd.has(t.id))
+      errors.push('<code>' + escapeHTML(t.id) + '</code> non raggiunge END.');
+  }
+
+  return { errors, warnings, data: { links: stripForbidden(frag.links) } };
+}
+
+/* ---------- step 4: stime ---------- */
+function validateStep4(frag) {
+  const errors = [], warnings = [];
+  errors.push(...checkHeader(frag, 4));
+  const c = commonScan(frag); warnings.push(...c.warnings);
+
+  if (!Array.isArray(frag.estimates) || frag.estimates.length === 0)
+    { errors.push('Manca l\'array <code>estimates</code>, oppure è vuoto.'); return { errors, warnings }; }
+
+  const byId = new Map(state.tasks.map(t => [t.id, t]));
+  const seen = new Set();
+  const TECH = ['analogous','parametric','three-point','bottom-up','expert'];
+
+  for (const e of frag.estimates) {
+    const label = '<code>' + escapeHTML(String(e.id)) + '</code>';
+    const t = byId.get(e.id);
+    if (!t) { errors.push(label + ': attività inesistente.'); continue; }
+    if (t.type !== 'activity')
+      { errors.push(label + ': è una ' + (t.type === 'milestone' ? 'milestone' : 'attività esterna') +
+        ', ha durata zero e non va stimata.'); continue; }
+    seen.add(e.id);
+    if (typeof e.duration !== 'number' || e.duration < 1 || e.duration % 1 !== 0)
+      errors.push(label + ': <code>duration</code> deve essere un intero di almeno 1 giorno.');
+    if (!TECH.includes(e.technique))
+      errors.push(label + ': tecnica "' + escapeHTML(String(e.technique)) + '" non riconosciuta.');
+    if (!e.basis) errors.push(label + ': manca la base della stima.');
+    if (!['high','medium','low'].includes(e.confidence))
+      errors.push(label + ': <code>confidence</code> deve essere high, medium o low.');
+    if (e.technique === 'three-point') {
+      const {optimistic:o, mostLikely:m, pessimistic:p} = e;
+      if ([o,m,p].some(v => typeof v !== 'number'))
+        errors.push(label + ': stima a tre punti incompleta.');
+      else if (!(o <= m && m <= p))
+        errors.push(label + ': i tre valori devono rispettare ottimistico ≤ probabile ≤ pessimistico ' +
+          '(ricevuti ' + o + ', ' + m + ', ' + p + ').');
+      else {
+        const pert = Math.round((o + 4*m + p) / 6);
+        if (pert !== e.duration)
+          warnings.push(label + ': la durata dichiarata è ' + e.duration +
+            ' ma il valore atteso PERT è ' + pert + '. Mostro entrambi, non correggo.');
+      }
+    }
+  }
+
+  for (const t of state.tasks) {
+    if (t.type === 'activity' && !seen.has(t.id))
+      errors.push('<code>' + escapeHTML(t.id) + '</code> è un\'attività senza stima.');
+  }
+
+  return { errors, warnings, data: { estimates: stripForbidden(frag.estimates) } };
+}
+
+const VALIDATORS = { 1: validateStep1, 2: validateStep2, 3: validateStep3, 4: validateStep4 };
+
+
+/* ============================================================
+   CALCOLO SUL PIANO CORRENTE
+   ============================================================ */
+
+function buildPlanForCPM() {
+  const durations = {}, threePoint = {}, constraints = {};
+  allTasks().forEach(t => { durations[t.id] = 0; });
+  (state.estimates || []).forEach(e => {
+    durations[e.id] = e.duration;
+    if (e.technique === 'three-point')
+      threePoint[e.id] = { optimistic: e.optimistic, mostLikely: e.mostLikely, pessimistic: e.pessimistic };
+  });
+
+  const cal = calendar();
+  state.tasks.forEach(t => {
+    if (t.type !== 'externalConstraint') return;
+    const iso = state.config.availability[t.contributor];
+    if (iso) constraints[t.id] = cal.indexOfDate(iso);
+  });
+
+  state.buffers.forEach(b => { durations[b.id] = b.duration; });
+  return { tasks: allTasks(), links: allLinks(), durations, threePoint, constraints };
+}
+
+function calendar() {
+  const start = state.config.start || todayISO();
+  return makeCalendar(start, state.config.holidays || []);
+}
+
+function cpmOptions() {
+  const opts = { nearCriticalThreshold: Number(state.config.nearThreshold) || 3 };
+  if (state.config.imposedEnd) opts.imposedEndDay = calendar().indexOfDate(state.config.imposedEnd);
+  return opts;
+}
+
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+
+/* ============================================================
+   RESA
+   ============================================================ */
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, ch =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function $(id) { return document.getElementById(id); }
+
+const STEP_META = {
+  1: { title: 'Passaggio 1 — Struttura di scomposizione',
+       lede: 'L\'assistente AI propone la WBS orientata ai deliverable. Qui la verifichi e la approvi.' },
+  2: { title: 'Passaggio 2 — Attività e milestone',
+       lede: 'Le attività necessarie a produrre i deliverable, senza durate né dipendenze.' },
+  3: { title: 'Passaggio 3 — Sequenza',
+       lede: 'I legami di precedenza. Il reticolo si disegna senza durate: è la logica, non ancora il tempo.' },
+  4: { title: 'Passaggio 4 — Stime',
+       lede: 'Le durate in giorni lavorativi. Da qui partono percorso critico, float e Gantt.' },
+  5: { title: 'Piano completo',
+       lede: 'Tutti i passaggi sono approvati. Il piano è calcolato e navigabile.' }
+};
+
+function renderChips() {
+  const cur = currentStep();
+  const names = ['WBS','Attività','Sequenza','Stime'];
+  $('stepChips').innerHTML = names.map((n, i) => {
+    const s = i + 1;
+    const cls = state.approved[s] ? 'done' : (s === cur ? 'active' : '');
+    const mark = state.approved[s] ? '✓' : s;
+    return '<div class="step-chip ' + cls + '"><span class="n">' + mark + '</span>' +
+           '<span>' + n + '</span></div>';
+  }).join('');
+}
+
+function renderStepPanel() {
+  const s = currentStep();
+  const meta = STEP_META[s];
+  $('stepTitle').textContent = meta.title;
+  $('stepLede').textContent = meta.lede;
+
+  if (s === 5) {
+    $('stepPanel').hidden = true;
+  } else {
+    $('stepPanel').hidden = false;
+    $('promptText').textContent = buildPrompt(s);
+  }
+  $('projName').textContent = state.project ? state.project.name : 'nessun piano caricato';
+  $('revLabel').textContent = 'rev ' + state.revision;
+  $('navNet').disabled = !state.approved[3];
+  $('navGantt').disabled = !state.approved[4];
+  $('navArch').disabled = !state.approved[1];
+}
+
+function buildPrompt(step) {
+  const head = 'Applica la metodologia e la guida presenti nel Context, sui documenti\n' +
+               'di progetto che vi trovi.\n\n';
+  const tail = '\n\nDiscuti prima a parole. Quando approvo, emetti il frammento JSON dello\n' +
+               'step ' + step + ' secondo la guida, e fermati.';
+
+  if (step === 1) {
+    return head +
+      'Produci la WBS orientata ai deliverable, con code of accounts gerarchico,\n' +
+      'fino al livello di work package. I rami non ancora dettagliabili restano\n' +
+      'planning package dichiarati come tali.' + tail;
+  }
+  if (step === 2) {
+    return head +
+      'Questa è la WBS già approvata, che non va modificata:\n\n' +
+      JSON.stringify({ wbs: state.wbs }, null, 2) + '\n\n' +
+      'Produci l\'elenco delle attività e delle milestone, ciascuna agganciata a un\n' +
+      'work package foglia, con un solo responsabile e un criterio di completamento\n' +
+      'verificabile. Includi le milestone previste dal charter o dal contratto, e i\n' +
+      'vincoli esterni come attività a durata zero che dichiarano solo il contributore.\n\n' +
+      'In questo passaggio non dichiarare durate né dipendenze.' + tail;
+  }
+  if (step === 3) {
+    return head +
+      'Queste sono la WBS e le attività già approvate, che non vanno modificate:\n\n' +
+      JSON.stringify({ wbs: state.wbs, tasks: state.tasks, contributors: state.contributors }, null, 2) +
+      '\n\nProduci i legami di precedenza fra le attività. Per ciascuno: tipo (FS, SS,\n' +
+      'FF, SF), lag in giorni lavorativi (negativo se è un lead), natura (mandatoria o\n' +
+      'discrezionale) e origine (interna o esterna). Motiva ogni legame discrezionale\n' +
+      'e ogni lag diverso da zero.\n\n' +
+      'Ogni attività deve essere raggiungibile da START e raggiungere END. Non\n' +
+      'introdurre durate.' + tail;
+  }
+  return head +
+    'Questi sono WBS, attività e sequenza già approvate, che non vanno modificate:\n\n' +
+    JSON.stringify({ wbs: state.wbs, tasks: state.tasks, links: state.links }, null, 2) +
+    '\n\nProduci le stime di durata in giorni lavorativi per le sole attività,\n' +
+    'dichiarando per ciascuna la tecnica usata, le basi della stima, la confidenza e\n' +
+    'il documento di origine. Dove l\'incertezza è reale usa la stima a tre punti con\n' +
+    'i valori ottimistico, più probabile e pessimistico.\n\n' +
+    'Le durate sono durate attese del lavoro: nessun margine prudenziale dentro le\n' +
+    'singole attività.' + tail;
+}
+
+let pendingApproval = null;
+
+function renderDiagnostics(res) {
+  const box = $('diag');
+  if (!res) { box.innerHTML = ''; return; }
+  let html = '';
+  for (const e of res.errors)
+    html += '<div class="diag-item err"><span class="tag">blocca</span><span>' + e + '</span></div>';
+  for (const w of res.warnings)
+    html += '<div class="diag-item warn"><span class="tag">avviso</span><span>' + w + '</span></div>';
+  if (res.errors.length === 0)
+    html = '<div class="diag-item ok"><span class="tag">ok</span><span>' +
+           'Il frammento è valido' + (res.warnings.length ? ', con avvisi da leggere' : '') +
+           '. Puoi approvare il passaggio.</span></div>' + html;
+  box.innerHTML = html;
+}
+
+function renderResult() {
+  const card = $('resultCard'), body = $('resultBody');
+  if (!state.wbs) { card.hidden = true; return; }
+  card.hidden = false;
+
+  let html = '';
+
+  /* WBS */
+  html += '<h3>Struttura di scomposizione</h3><div class="tree">';
+  const children = {};
+  state.wbs.forEach(w => {
+    const p = w.parent || '__root';
+    (children[p] = children[p] || []).push(w);
+  });
+  (function walk(parent, depth) {
+    (children[parent] || []).forEach(w => {
+      const pad = '&nbsp;'.repeat(depth * 4);
+      const badge = w.type === 'planningPackage'
+        ? '<span class="pill external">planning package</span>'
+        : (w.type === 'workPackage' ? '<span class="pill activity">work package</span>' : '');
+      html += '<div class="tree-row"><span class="code">' + escapeHTML(w.code) + '</span>' +
+              '<span>' + pad + escapeHTML(w.name) + ' ' + badge + '</span></div>';
+      walk(w.code, depth + 1);
+    });
+  })('__root', 0);
+  html += '</div>';
+
+  /* attività */
+  if (state.tasks) {
+    const cpm = state.estimates ? computeCPM(buildPlanForCPM(), cpmOptions()) : null;
+    const cal = calendar();
+    const fmt = i => cal.dateOfIndex(i).toLocaleDateString('it-IT',
+      { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    if (cpm && cpm.ok) {
+      html += '<h3 style="margin-top:20px">Schedulazione</h3><div class="kpi">' +
+        '<div><span class="v">' + fmt(cpm.calculatedEndDay) + '</span><span class="l">fine calcolata</span></div>' +
+        '<div><span class="v">' + cpm.calculatedEndDay + '</span><span class="l">giorni lavorativi</span></div>' +
+        '<div><span class="v">' + cpm.minTotalFloat + '</span><span class="l">float minimo</span></div>' +
+        '<div><span class="v">' + Object.values(cpm.critical).filter(Boolean).length +
+          '</span><span class="l">elementi critici</span></div>' +
+        '</div>';
+    }
+
+    html += '<h3 style="margin-top:20px">Attività</h3><table><thead><tr>' +
+      '<th>Id</th><th>Attività</th><th>Tipo</th><th>Resp.</th><th>WBS</th>' +
+      (cpm && cpm.ok ? '<th class="num">Dur</th><th>Inizio</th><th>Fine</th>' +
+        '<th class="num">TF</th><th class="num">FF</th><th>Stato</th>' : '') +
+      '</tr></thead><tbody>';
+
+    for (const t of state.tasks) {
+      const est = (state.estimates || []).find(e => e.id === t.id);
+      let extra = '';
+      if (cpm && cpm.ok) {
+        const dur = est ? est.duration : 0;
+        let stato = '';
+        if (cpm.hypercritical[t.id]) stato = '<span class="pill critical">ipercritica</span>';
+        else if (cpm.critical[t.id]) stato = '<span class="pill critical">critica</span>';
+        else if (cpm.nearCritical[t.id]) stato = '<span class="pill near">quasi critica</span>';
+        extra = '<td class="num">' + dur + '</td>' +
+                '<td class="mono">' + fmt(cpm.ES[t.id]) + '</td>' +
+                '<td class="mono">' + fmt(Math.max(cpm.ES[t.id], cpm.EF[t.id] - (dur ? 1 : 0))) + '</td>' +
+                '<td class="num">' + cpm.TF[t.id] + '</td>' +
+                '<td class="num">' + cpm.FF[t.id] + '</td>' +
+                '<td>' + stato + '</td>';
+      }
+      const tipo = t.type === 'activity' ? '<span class="pill activity">attività</span>'
+                 : t.type === 'milestone' ? '<span class="pill milestone">milestone</span>'
+                 : '<span class="pill external">vincolo esterno</span>';
+      html += '<tr><td class="mono">' + escapeHTML(t.id) + '</td>' +
+              '<td>' + escapeHTML(t.name) + '</td>' +
+              '<td>' + tipo + '</td>' +
+              '<td>' + escapeHTML(t.owner || t.contributor || '') + '</td>' +
+              '<td class="mono muted">' + escapeHTML(t.wbsId || '') + '</td>' +
+              extra + '</tr>';
+    }
+    html += '</tbody></table>';
+  }
+
+  /* domande aperte */
+  const qs = [];
+  for (const s in state.openQuestions)
+    (state.openQuestions[s] || []).forEach(q => qs.push({ s, q }));
+  if (qs.length) {
+    html += '<h3 style="margin-top:20px">Questioni aperte dichiarate</h3><ul>';
+    qs.forEach(x => { html += '<li><span class="muted mono">passaggio ' + x.s + '</span> — ' +
+      escapeHTML(x.q) + '</li>'; });
+    html += '</ul>';
+  }
+
+  body.innerHTML = html;
+}
+
+function renderConfig() {
+  $('cfgStart').value = state.config.start || '';
+  $('cfgImposed').value = state.config.imposedEnd || '';
+  $('cfgNear').value = state.config.nearThreshold;
+  $('cfgIter').value = state.config.iterations;
+  $('cfgHolidays').value = (state.config.holidays || []).join('\n');
+
+  const box = $('cfgContributors');
+  if (!state.contributors || !state.contributors.length) {
+    box.innerHTML = '<p class="muted">Nessun contributore: compare dopo il passaggio 2.</p>';
+    return;
+  }
+  box.innerHTML = '<div class="grid2">' + state.contributors.map(c =>
+    '<div class="field"><label for="av_' + escapeHTML(c.id) + '">' +
+    escapeHTML(c.label || c.id) + '</label>' +
+    '<input type="date" id="av_' + escapeHTML(c.id) + '" data-contrib="' + escapeHTML(c.id) +
+    '" value="' + escapeHTML(state.config.availability[c.id] || '') + '"></div>').join('') + '</div>';
+}
+
+function renderFootNote() {
+  const bits = [];
+  if (!state.storageOK)
+    bits.push('Il salvataggio locale non è disponibile in questo contesto: il piano vive in memoria. ' +
+              'Scarica il file per conservarlo.');
+  bits.push('Il calcolo è deterministico e avviene in locale. Nessun dato lascia questa pagina.');
+  $('footNote').textContent = bits.join(' ');
+}
+
+function renderAll() {
+  renderChips(); renderStepPanel(); renderResult(); renderFootNote();
+  $('btnUndo').disabled = history.past.length === 0;
+  $('btnRedo').disabled = history.future.length === 0;
+  $('netEdit').textContent = editMode ? 'Fine modifica' : 'Modifica';
+  $('ganttEdit').textContent = editMode ? 'Fine modifica' : 'Modifica';
+  $('netFilter').value = state.view.netFilter;
+  $('ganttFilter').value = state.view.ganttFilter;
+  document.querySelectorAll('#scaleSeg button').forEach(b =>
+    b.setAttribute('aria-pressed', b.dataset.scale === state.view.scale));
+  const owners = [...new Set((state.tasks || []).map(t => t.owner).filter(Boolean))].sort();
+  $('ownerFilter').innerHTML = '<option value="">ogni responsabile</option>' +
+    owners.map(o => '<option' + (state.view.owner === o ? ' selected' : '') + '>' +
+      escapeHTML(o) + '</option>').join('');
+  if (!$('scrNet').hidden) renderNet();
+  if (!$('scrGantt').hidden) { renderGantt(); renderSimulation(); }
+  if (!$('scrArchive').hidden) renderHistory();
+}
+
+
+
+/* ============================================================
+   FILTRI, VISIBILITA', BUFFER
+   ============================================================ */
+
+function activeFilterLabel(kind) {
+  const f = kind === 'net' ? state.view.netFilter : state.view.ganttFilter;
+  const bits = [];
+  if (f === 'crit')     bits.push('solo percorso critico');
+  if (f === 'critnear') bits.push('critico e quasi critico');
+  if (f === 'ms')       bits.push('solo milestone e vincoli esterni');
+  if (kind === 'gantt' && state.view.owner) bits.push('responsabile ' + state.view.owner);
+  return bits.join(', ');
+}
+
+function visibleIds(cpm, kind) {
+  const f = kind === 'net' ? state.view.netFilter : state.view.ganttFilter;
+  const owner = kind === 'gantt' ? state.view.owner : '';
+  const keep = new Set();
+  for (const t of allTasks()) {
+    let ok = true;
+    if (f === 'crit')     ok = !!(cpm && (cpm.critical[t.id] || cpm.hypercritical[t.id]));
+    if (f === 'critnear') ok = !!(cpm && (cpm.critical[t.id] || cpm.hypercritical[t.id] || cpm.nearCritical[t.id]));
+    if (f === 'ms')       ok = t.type !== 'activity';
+    if (ok && owner && (t.owner || '') !== owner) ok = false;
+    if (t.id === 'START' || t.id === 'END') ok = true;
+    if (ok) keep.add(t.id);
+  }
+  return keep;
+}
+
+/* i buffer sono attivita' generate qui, mai dall'assistente AI */
+function allTasks() {
+  return (state.tasks || []).concat(state.buffers.map(b => ({
+    id: b.id, name: b.name, type: 'activity', wbsId: null,
+    owner: 'riserva', isBuffer: true
+  })));
+}
+
+function allLinks() {
+  const extra = [];
+  const replaced = new Set();
+  for (const b of state.buffers) {
+    // la riserva si interpone: il legame diretto che scavalcherebbe va sospeso,
+    // altrimenti resterebbe un percorso parallelo e la riserva non proteggerebbe nulla
+    replaced.add(b.after + '>' + b.before);
+    extra.push({ from: b.after, to: b.id, type: 'FS', lag: 0,
+      nature: 'mandatory', origin: 'internal', isBuffer: true });
+    extra.push({ from: b.id, to: b.before, type: 'FS', lag: 0,
+      nature: 'mandatory', origin: 'internal', isBuffer: true });
+  }
+  return (state.links || [])
+    .filter(l => !replaced.has(l.from + '>' + l.to))
+    .concat(extra);
+}
+
+/* ============================================================
+   RETICOLO
+   ============================================================ */
+
+function renderNet() {
+  const canvas = $('netCanvas');
+  if (!state.links || !state.tasks) { canvas.innerHTML = ''; return; }
+
+  const tasks = allTasks(), links = allLinks();
+  const cpm = state.estimates ? computeCPM(buildPlanForCPM(), cpmOptions()) : null;
+  const { order } = topoSort(tasks, links);
+  const lay = layoutNetwork(tasks, links, order);
+  const vis = visibleIds(cpm, 'net');
+  const byId = new Map(tasks.map(t => [t.id, t]));
+  const est = new Map((state.estimates || []).map(e => [e.id, e]));
+
+  $('netSub').textContent = lay.layers.length + ' livelli, ' + tasks.length + ' elementi' +
+    (cpm && cpm.ok ? ', ' + Object.values(cpm.critical).filter(Boolean).length + ' critici' : '');
+
+  const note = activeFilterLabel('net');
+  $('netFilterNote').innerHTML = note
+    ? '<div class="filter-note">Vista filtrata: ' + escapeHTML(note) +
+      '. Gli elementi esclusi restano nel piano.</div>' : '';
+
+  /* frecce */
+  let svg = '<svg width="' + lay.width + '" height="' + lay.height + '">' +
+    '<defs><marker id="ar" markerWidth="7" markerHeight="7" refX="6.5" refY="3.5" orient="auto">' +
+    '<path d="M0,0 L7,3.5 L0,7 z" fill="currentColor"/></marker></defs>';
+  const lanes = {};
+  for (const l of links) {
+    const a = lay.nodes[l.from], b = lay.nodes[l.to];
+    if (!a || !b) continue;
+    if (!vis.has(l.from) || !vis.has(l.to)) continue;
+    const key = a.rank + ':' + b.rank;
+    lanes[key] = (lanes[key] || 0) + 1;
+    const crit = cpm && cpm.ok && cpm.critical[l.from] && cpm.critical[l.to] &&
+                 !(cpm.TF[l.to] > 0);
+    const cls = 'edge' + (crit ? ' crit' : '') + (l.nature === 'discretionary' ? ' disc' : '');
+    const d = edgePath(a, b, lay.metrics, lanes[key] % 3);
+    svg += '<path class="' + cls + '" d="' + d + '" marker-end="url(#ar)" ' +
+           'style="color:' + (crit ? 'var(--critical-stroke)' : 'var(--border)') + '"/>';
+    const tag = (l.type !== 'FS' ? l.type : '') +
+                (l.lag ? (l.lag > 0 ? '+' + l.lag : String(l.lag)) : '');
+    if (tag) {
+      const mx = (a.x + a.w + b.x) / 2, my = (a.y + a.h / 2 + b.y + b.h / 2) / 2 - 3;
+      svg += '<text class="edge-label" x="' + mx + '" y="' + my + '">' + escapeHTML(tag) + '</text>';
+    }
+  }
+  svg += '</svg>';
+
+  /* nodi */
+  let html = '';
+  for (const t of tasks) {
+    const n = lay.nodes[t.id];
+    if (!n) continue;
+    const e = est.get(t.id);
+    const d = t.isBuffer ? (state.buffers.find(b => b.id === t.id) || {}).duration
+                         : (e ? e.duration : 0);
+    let cls = 'node';
+    if (t.type === 'milestone') cls += ' milestone';
+    if (t.type === 'externalConstraint') cls += ' external';
+    if (cpm && cpm.ok) {
+      if (cpm.hypercritical[t.id] || cpm.critical[t.id]) cls += ' crit';
+      else if (cpm.nearCritical[t.id]) cls += ' near';
+    }
+    if (!vis.has(t.id)) cls += ' dim';
+    const v = k => (cpm && cpm.ok) ? cpm[k][t.id] : '·';
+    html += '<div class="' + cls + '" data-id="' + escapeHTML(t.id) + '" ' +
+      'style="left:' + n.x + 'px;top:' + n.y + 'px;width:' + n.w + 'px;height:' + n.h + 'px">' +
+      (state.manual[t.id] != null ? '<span class="manual">m</span>' : '') +
+      '<div class="cells"><span>' + v('ES') + '</span><span>' + (d || 0) +
+        '</span><span>' + v('EF') + '</span></div>' +
+      '<div class="title">' + escapeHTML(t.name) + '</div>' +
+      '<div class="cells bottom"><span>' + v('LS') + '</span><span>' + v('TF') +
+        '</span><span>' + v('LF') + '</span></div></div>';
+  }
+
+  canvas.style.width = lay.width + 'px';
+  canvas.style.height = lay.height + 'px';
+  canvas.innerHTML = svg + html;
+  canvas.classList.toggle('editing', editMode);
+
+  if (editMode) {
+    canvas.querySelectorAll('.node').forEach(el => {
+      el.addEventListener('click', () => openTaskEditor(el.dataset.id));
+    });
+  }
+}
+
+/* ============================================================
+   GANTT
+   ============================================================ */
+
+const SCALE = {
+  day:   { px: 26 },
+  week:  { px: 15 },
+  month: { px: 6 }
+};
+
+function ganttTicks(cal, totalDays, scale) {
+  const px = SCALE[scale].px;
+  const ticks = [];
+  if (scale === 'day') {
+    for (let i = 0; i <= totalDays; i++) {
+      const d = cal.dateOfIndex(i);
+      ticks.push({ x: i * px, w: px,
+        label: String(d.getUTCDate()).padStart(2, '0') });
+    }
+    return ticks;
+  }
+  if (scale === 'week') {
+    let i = 0;
+    while (i <= totalDays) {
+      const d = cal.dateOfIndex(i);
+      const dow = (d.getUTCDay() + 6) % 7;       // 0 = lunedi
+      const span = Math.min(5 - dow, totalDays - i + 1);
+      ticks.push({ x: i * px, w: span * px,
+        label: String(d.getUTCDate()).padStart(2, '0') + '/' +
+               String(d.getUTCMonth() + 1).padStart(2, '0') });
+      i += span;
+    }
+    return ticks;
+  }
+  let i = 0, cur = null, startI = 0;
+  const MESI = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+  while (i <= totalDays) {
+    const d = cal.dateOfIndex(i);
+    const key = d.getUTCFullYear() + '-' + d.getUTCMonth();
+    if (cur === null) { cur = key; startI = i; }
+    else if (key !== cur) {
+      const dd = cal.dateOfIndex(startI);
+      ticks.push({ x: startI * px, w: (i - startI) * px,
+        label: MESI[dd.getUTCMonth()] + ' ' + String(dd.getUTCFullYear()).slice(2) });
+      cur = key; startI = i;
+    }
+    i++;
+  }
+  if (cur !== null) {
+    const dd = cal.dateOfIndex(startI);
+    ticks.push({ x: startI * px, w: (totalDays - startI + 1) * px,
+      label: MESI[dd.getUTCMonth()] + ' ' + String(dd.getUTCFullYear()).slice(2) });
+  }
+  return ticks;
+}
+
+function renderGantt() {
+  const host = $('ganttCanvas');
+  if (!state.estimates) { host.innerHTML = ''; return; }
+
+  const cpm = computeCPM(buildPlanForCPM(), cpmOptions());
+  if (!cpm.ok) {
+    host.innerHTML = '<p class="muted" style="padding:16px">Il piano non è calcolabile: ' +
+      'controlla la sequenza.</p>';
+    return;
+  }
+  const cal = calendar();
+  const scale = state.view.scale, px = SCALE[scale].px;
+  const total = Math.max(cpm.projectEndDay, cpm.calculatedEndDay) + 1;
+  const width = total * px;
+  const vis = visibleIds(cpm, 'gantt');
+  const est = new Map((state.estimates || []).map(e => [e.id, e]));
+
+  /* indicatori */
+  const fmt = i => cal.dateOfIndex(i).toLocaleDateString('it-IT',
+    { day: '2-digit', month: '2-digit', year: 'numeric' });
+  $('ganttKpi').innerHTML =
+    '<div><span class="v">' + fmt(cpm.calculatedEndDay) + '</span><span class="l">fine calcolata</span></div>' +
+    '<div><span class="v">' + cpm.calculatedEndDay + '</span><span class="l">giorni lavorativi</span></div>' +
+    '<div><span class="v">' + cpm.minTotalFloat + '</span><span class="l">float minimo</span></div>' +
+    (cpm.criticalPathStdDev ? '<div><span class="v">±' + cpm.criticalPathStdDev.toFixed(1) +
+      '</span><span class="l">dev. std percorso critico</span></div>' : '');
+
+  const note = activeFilterLabel('gantt');
+  $('ganttFilterNote').innerHTML = note
+    ? '<div class="filter-note">Vista filtrata: ' + escapeHTML(note) +
+      '. Le date restano quelle del piano completo.</div>' : '';
+
+  /* righe raggruppate per work package */
+  const groups = {};
+  for (const t of allTasks()) {
+    if (!vis.has(t.id)) continue;
+    const g = t.wbsId || (t.isBuffer ? '__buf' : '__ms');
+    (groups[g] = groups[g] || []).push(t);
+  }
+  const wbsName = {};
+  (state.wbs || []).forEach(w => { wbsName[w.code] = w.name; });
+  wbsName['__buf'] = 'Riserve di schedulazione';
+  wbsName['__ms'] = 'Milestone di progetto';
+
+  let left = '<div class="ghead"></div>', right = '';
+  right += '<div class="ghead" style="width:' + width + 'px">' +
+    ganttTicks(cal, total - 1, scale).map(t =>
+      '<div class="gtick" style="left:' + t.x + 'px;width:' + t.w + 'px">' +
+      escapeHTML(t.label) + '</div>').join('') + '</div>';
+
+  const codes = Object.keys(groups).sort();
+  for (const code of codes) {
+    left += '<div class="glabel group">' + escapeHTML(wbsName[code] || code) + '</div>';
+    right += '<div class="grow group" style="width:' + width + 'px"></div>';
+
+    for (const t of groups[code]) {
+      const e = est.get(t.id);
+      const buf = state.buffers.find(b => b.id === t.id);
+      const dur = buf ? buf.duration : (e ? e.duration : 0);
+      const critical = cpm.critical[t.id] || cpm.hypercritical[t.id];
+      const near = cpm.nearCritical[t.id];
+      const man = state.manual[t.id] != null ? ' <span class="mono" style="color:var(--accent)">m</span>' : '';
+
+      left += '<div class="glabel"><span class="gid">' + escapeHTML(t.id) + '</span>' +
+        escapeHTML(t.name) + man + '</div>';
+
+      let bar = '';
+      const x = cpm.ES[t.id] * px;
+      if (dur > 0) {
+        const cls = 'gbar' + (buf ? ' buffer' : (critical ? ' crit' : (near ? ' near' : '')));
+        bar += '<div class="' + cls + '" data-id="' + escapeHTML(t.id) + '" title="' +
+          escapeHTML(t.name + ' — ' + dur + ' gg, TF ' + cpm.TF[t.id]) + '" ' +
+          'style="left:' + x + 'px;width:' + Math.max(3, dur * px) + 'px"></div>';
+        if (cpm.TF[t.id] > 0)
+          bar += '<div class="gfloat" style="left:' + (x + dur * px) + 'px;width:' +
+            (cpm.TF[t.id] * px) + 'px"></div>';
+      } else {
+        const cls = 'gms' + (t.type === 'externalConstraint' ? ' ext' : '') +
+                    (critical ? ' crit' : '');
+        bar += '<div class="' + cls + '" style="left:' + (x - 6) + 'px"></div>';
+        if (scale === 'month' || t.type === 'externalConstraint')
+          bar += '<div class="gmslabel" style="left:' + (x + 10) + 'px">' +
+            escapeHTML(t.name) + '</div>';
+      }
+      right += '<div class="grow" style="width:' + width + 'px">' + bar + '</div>';
+    }
+  }
+
+  host.innerHTML = '<div class="gantt' + (editMode ? ' editing' : '') + '">' +
+    '<div class="left">' + left + '</div><div class="right">' + right + '</div></div>';
+
+  if (editMode) {
+    host.querySelectorAll('.gbar').forEach(el => {
+      if (el.dataset.id) el.addEventListener('click', () => openTaskEditor(el.dataset.id));
+    });
+  }
+}
+
+
+function runSimulation() {
+  const n = Number(state.config.iterations) || 2000;
+  const res = simulate(buildPlanForCPM(), cpmOptions(), n);
+  state.simResult = res;
+  renderSimulation();
+}
+
+function renderSimulation() {
+  const box = $('simBox');
+  const res = state.simResult;
+  if (!res) { box.innerHTML = ''; return; }
+  const cpm = computeCPM(buildPlanForCPM(), cpmOptions());
+  const cal = calendar();
+  const fmt = i => cal.dateOfIndex(i).toLocaleDateString('it-IT',
+    { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  /* istogramma essenziale */
+  const min = res.min, max = res.max, bins = Math.min(28, Math.max(6, max - min + 1));
+  const counts = new Array(bins).fill(0);
+  res.distribution.forEach(v => {
+    const b = max === min ? 0 : Math.min(bins - 1, Math.floor((v - min) / (max - min + 1) * bins));
+    counts[b]++;
+  });
+  const peak = Math.max(...counts);
+  const bars = counts.map((c, i) =>
+    '<div title="' + Math.round(min + (max - min) * i / bins) + ' giorni: ' + c + ' scenari" ' +
+    'style="flex:1;height:' + Math.round(4 + 52 * c / peak) + 'px;background:var(--accent-soft);' +
+    'border-top:2px solid var(--accent);"></div>').join('');
+
+  const critici = Object.entries(res.criticalityIndex)
+    .filter(([id, v]) => v > 0.05 && id !== 'START' && id !== 'END')
+    .sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const names = {}; allTasks().forEach(t => { names[t.id] = t.name; });
+
+  box.innerHTML =
+    '<h3 style="margin-top:18px">Analisi probabilistica</h3>' +
+    '<p class="muted" style="margin:0 0 10px">' + res.iterations +
+    ' scenari sulle attività stimate a tre punti. Non modifica il piano.</p>' +
+    '<div class="kpi">' +
+      '<div><span class="v">' + fmt(res.p50) + '</span><span class="l">P50</span></div>' +
+      '<div><span class="v">' + fmt(res.p80) + '</span><span class="l">P80</span></div>' +
+      '<div><span class="v">' + fmt(res.p90) + '</span><span class="l">P90</span></div>' +
+      '<div><span class="v">' + (res.p80 - cpm.calculatedEndDay) +
+        '</span><span class="l">giorni fra la fine calcolata e il P80</span></div>' +
+    '</div>' +
+    '<div style="display:flex;align-items:flex-end;gap:1px;height:60px;margin:12px 0 4px">' +
+      bars + '</div>' +
+    '<div class="row muted" style="font-size:11px"><span>' + fmt(min) +
+      '</span><div class="spacer"></div><span>' + fmt(max) + '</span></div>' +
+    (critici.length ?
+      '<h3 style="margin-top:16px">Indice di criticità</h3>' +
+      '<p class="muted" style="margin:0 0 8px;font-size:11px">Quota di scenari in cui l\'attività ' +
+      'cade sul percorso critico. Un valore alto con float positivo segnala un rischio che il ' +
+      'calcolo deterministico non mostra.</p>' +
+      '<table><tbody>' + critici.map(([id, v]) =>
+        '<tr><td class="mono">' + escapeHTML(id) + '</td><td>' + escapeHTML(names[id] || '') +
+        '</td><td class="num">' + Math.round(v * 100) + '%</td>' +
+        '<td class="num muted">TF ' + (cpm.ok ? cpm.TF[id] : '·') + '</td></tr>').join('') +
+      '</tbody></table>' : '');
+}
+
+/* ============================================================
+   MODIFICA
+   ============================================================ */
+
+let editMode = false;
+
+function setEditMode(on) {
+  if (on && state.baseline) {
+    confirmModal('Modificare un piano con baseline congelata',
+      ['La baseline è stata congelata alla revisione ' + state.baseline.revision + '.',
+       'Le modifiche resteranno confrontabili con la baseline, ma il piano non sarà più identico ad essa.'],
+      () => { editMode = true; renderAll(); });
+    return;
+  }
+  editMode = on;
+  renderAll();
+}
+
+function openTaskEditor(id) {
+  const t = allTasks().find(x => x.id === id);
+  if (!t) return;
+  const e = (state.estimates || []).find(x => x.id === id);
+  const buf = state.buffers.find(b => b.id === id);
+  const outLinks = (state.links || []).filter(l => l.from === id);
+
+  let body = '<div class="field"><label>Attività</label><div>' + escapeHTML(t.name) + '</div></div>';
+
+  if (buf) {
+    body += '<div class="field" style="margin-top:12px"><label for="edDur">Durata della riserva (giorni)</label>' +
+      '<input type="number" id="edDur" min="0" value="' + buf.duration + '"></div>' +
+      '<div class="field" style="margin-top:12px"><label for="edBasis">Motivazione</label>' +
+      '<input type="text" id="edBasis" value="' + escapeHTML(buf.rationale || '') + '"></div>';
+  } else if (e) {
+    body += '<div class="field" style="margin-top:12px"><label for="edDur">Durata (giorni lavorativi)</label>' +
+      '<input type="number" id="edDur" min="1" value="' + e.duration + '"></div>' +
+      '<div class="field" style="margin-top:12px"><label for="edBasis">Base della stima</label>' +
+      '<input type="text" id="edBasis" value="' + escapeHTML(e.basis || '') + '"></div>' +
+      '<p class="muted" style="margin-top:8px;font-size:11px">Modificare una durata ricalcola il piano ' +
+      'e non invalida i passaggi approvati.</p>';
+  } else {
+    body += '<p class="muted" style="margin-top:12px">Milestone e vincoli esterni hanno durata zero. ' +
+      'La disponibilità di un contributore si cambia dalla configurazione.</p>';
+  }
+
+  if (outLinks.length) {
+    body += '<h3 style="margin-top:18px">Legami in uscita</h3>';
+    outLinks.forEach((l, i) => {
+      body += '<div class="row" style="margin-bottom:6px"><span class="mono">→ ' + escapeHTML(l.to) + '</span>' +
+        '<select data-link="' + i + '" data-field="type">' +
+        ['FS','SS','FF','SF'].map(v => '<option' + (l.type === v ? ' selected' : '') + '>' + v + '</option>').join('') +
+        '</select>' +
+        '<input type="number" data-link="' + i + '" data-field="lag" value="' + (l.lag || 0) +
+        '" style="width:70px" title="lag, negativo per lead">' +
+        '<span class="pill ' + (l.nature === 'discretionary' ? 'near' : 'activity') + '">' +
+        (l.nature === 'discretionary' ? 'discrezionale' : 'mandatorio') + '</span></div>';
+    });
+    body += '<p class="muted" style="font-size:11px">Cambiare un lag ricalcola. ' +
+      'Aggiungere o togliere un legame invaliderebbe le stime: si fa rigenerando il passaggio 3.</p>';
+  }
+
+  modal('Modifica', body, 'Applica', () => {
+    pushHistory();
+    const durEl = $('edDur');
+    if (durEl) {
+      const v = Number(durEl.value);
+      if (buf) { buf.duration = Math.max(0, v); buf.rationale = $('edBasis').value; }
+      else if (e && v >= 1) {
+        if (v !== e.duration) markManual(id);
+        e.duration = v; e.basis = $('edBasis').value;
+      }
+    }
+    document.querySelectorAll('[data-link]').forEach(el => {
+      const l = outLinks[Number(el.dataset.link)];
+      if (el.dataset.field === 'type' && el.value !== l.type) { l.type = el.value; markManual('link:' + l.from + '>' + l.to); }
+      if (el.dataset.field === 'lag') {
+        const nv = Number(el.value) || 0;
+        if (nv !== l.lag) { l.lag = nv; markManual('link:' + l.from + '>' + l.to); }
+      }
+    });
+    state.revision++;
+    saveState(); renderAll();
+  });
+}
+
+/* ============================================================
+   MODALI
+   ============================================================ */
+
+function modal(title, bodyHTML, okLabel, onOk, danger) {
+  const host = $('modalHost');
+  host.innerHTML = '<div class="modal-back"><div class="modal" role="dialog" aria-modal="true">' +
+    '<h2>' + escapeHTML(title) + '</h2>' + bodyHTML +
+    '<div class="row" style="margin-top:16px"><button class="btn ' +
+    (danger ? 'danger' : 'primary') + '" id="mOk">' + escapeHTML(okLabel) + '</button>' +
+    '<button class="btn quiet" id="mCancel">Annulla</button></div></div></div>';
+  $('mCancel').addEventListener('click', () => { host.innerHTML = ''; });
+  $('mOk').addEventListener('click', () => { host.innerHTML = ''; onOk(); });
+}
+
+function confirmModal(title, lines, onOk, danger) {
+  modal(title, '<ul>' + lines.map(l => '<li>' + escapeHTML(l) + '</li>').join('') + '</ul>',
+    'Procedi', onOk, danger);
+}
+
+/* ============================================================
+   RISERVE
+   ============================================================ */
+
+function openBufferDialog() {
+  const targets = (state.tasks || []).filter(t =>
+    t.type === 'milestone' && ['charter','contract'].includes(t.milestoneSource) || t.id === 'END');
+  if (!targets.length) { modal('Riserva di schedulazione',
+    '<p class="muted">Nessuna milestone contrattuale né END: non c\'è dove collocare una riserva.</p>',
+    'Chiudi', () => {}); return; }
+
+  const cpm = computeCPM(buildPlanForCPM(), cpmOptions());
+  const preds = new Map((state.tasks || []).map(t => [t.id, []]));
+  allLinks().forEach(l => { if (preds.has(l.to)) preds.get(l.to).push(l.from); });
+
+  let body = '<p class="muted">La riserva è un\'attività visibile che protegge una milestone. ' +
+    'Non va nascosta dentro le durate.</p>' +
+    '<div class="field" style="margin-top:12px"><label for="bufTarget">Protegge</label><select id="bufTarget">' +
+    targets.map(t => '<option value="' + escapeHTML(t.id) + '">' + escapeHTML(t.name) + '</option>').join('') +
+    '</select></div>' +
+    '<div class="field" style="margin-top:12px"><label for="bufDur">Durata (giorni lavorativi)</label>' +
+    '<input type="number" id="bufDur" min="1" value="5"></div>' +
+    '<div class="field" style="margin-top:12px"><label for="bufWhy">Motivazione</label>' +
+    '<input type="text" id="bufWhy" placeholder="Su cosa si basa questa riserva"></div>';
+
+  if (state.simResult)
+    body += '<p class="muted" style="margin-top:10px">Riferimento suggerito: lo scarto fra la fine ' +
+      'calcolata e il P80 è di ' + (state.simResult.p80 - cpm.calculatedEndDay) + ' giorni.</p>';
+
+  modal('Aggiungi una riserva', body, 'Aggiungi', () => {
+    const target = $('bufTarget').value;
+    const dur = Math.max(1, Number($('bufDur').value) || 1);
+    const why = $('bufWhy').value;
+    const ps = preds.get(target) || [];
+    if (!ps.length) return;
+    pushHistory();
+    const id = 'BUF' + (state.buffers.length + 1);
+    state.buffers.push({ id, name: 'Riserva prima di ' + target, duration: dur,
+      rationale: why, after: ps[0], before: target });
+    // il legame diretto originale resta: la riserva si affianca come percorso parallelo
+    state.revision++;
+    saveState(); renderAll();
+  });
+}
+
+/* ============================================================
+   ESPORTAZIONI
+   ============================================================ */
+
+function download(name, content, mime) {
+  const blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+}
+
+function slug(s) {
+  return String(s || 'piano').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function exportMeta() {
+  return {
+    progetto: state.project ? state.project.name : '',
+    revisione: state.revision,
+    autore: state.user || '',
+    generato: new Date().toISOString(),
+    scala: state.view.scale,
+    filtri: [activeFilterLabel('net'), activeFilterLabel('gantt')].filter(Boolean).join(' | ') || 'nessuno',
+    baseline: state.baseline ? ('congelata alla revisione ' + state.baseline.revision) : 'non congelata'
+  };
+}
+
+function exportJSON() {
+  download(slug(state.project && state.project.name) + '-rev' + state.revision + '.json',
+    JSON.stringify({ meta: exportMeta(), state }, null, 2), 'application/json');
+}
+
+function exportHTML() {
+  const doc = document.documentElement.cloneNode(true);
+  // rimuove modali e stato transitorio
+  const host = doc.querySelector('#modalHost'); if (host) host.innerHTML = '';
+  // inietta lo stato come seme: l'apertura non dipende dallo storage locale
+  const seed = doc.createElement('script');
+  seed.textContent = 'window.__SEED__ = ' + JSON.stringify(state) + ';';
+  doc.querySelector('head').appendChild(seed);
+  download(slug(state.project && state.project.name) + '-rev' + state.revision + '.html',
+    '<!DOCTYPE html>\n' + doc.outerHTML, 'text/html;charset=utf-8');
+}
+
+/* resa leggibile di un passaggio */
+function readableStep(step) {
+  const f = state.fragments[step];
+  if (!f) return '';
+  const m = exportMeta();
+  let out = 'PASSAGGIO ' + step + '\n' +
+    'Progetto: ' + m.progetto + '   Revisione: ' + m.revisione + '\n' +
+    'Approvato il ' + (state.approved[step] ? new Date(state.approved[step].at).toLocaleString('it-IT') : '—') +
+    '\n' + '='.repeat(66) + '\n\n';
+
+  if (step === 1) {
+    const kids = {};
+    (f.wbs || []).forEach(w => { (kids[w.parent || '__r'] = kids[w.parent || '__r'] || []).push(w); });
+    (function walk(p, d) {
+      (kids[p] || []).forEach(w => {
+        out += ' '.repeat(d * 3) + w.code + '  ' + w.name +
+          (w.type === 'planningPackage' ? '  [planning package]' :
+           w.type === 'workPackage' ? '  [work package]' : '') + '\n';
+        walk(w.code, d + 1);
+      });
+    })('__r', 0);
+  }
+
+  if (step === 2) {
+    const byW = {};
+    (f.tasks || []).forEach(t => { (byW[t.wbsId] = byW[t.wbsId] || []).push(t); });
+    const names = {}; (state.wbs || []).forEach(w => { names[w.code] = w.name; });
+    for (const code of Object.keys(byW).sort()) {
+      out += code + ' — ' + (names[code] || '') + '\n';
+      byW[code].forEach(t => {
+        out += '   ' + t.id.padEnd(8) + t.name + '\n';
+        out += '   ' + ' '.repeat(8) + 'tipo: ' +
+          (t.type === 'activity' ? 'attività' : t.type === 'milestone' ? 'milestone' : 'vincolo esterno') +
+          '   responsabile: ' + (t.owner || t.contributor || '—') + '\n';
+        if (t.completionCriteria)
+          out += '   ' + ' '.repeat(8) + 'completa quando: ' + t.completionCriteria + '\n';
+      });
+      out += '\n';
+    }
+  }
+
+  if (step === 3) {
+    const names = {}; (state.tasks || []).forEach(t => { names[t.id] = t.name; });
+    const verb = { FS: 'non può iniziare finché non è finita',
+                   SS: 'non può iniziare finché non è iniziata',
+                   FF: 'non può finire finché non è finita',
+                   SF: 'non può finire finché non è iniziata' };
+    (f.links || []).forEach(l => {
+      const lagTxt = l.lag > 0 ? ', più ' + l.lag + ' giorni di attesa'
+                   : l.lag < 0 ? ', con ' + (-l.lag) + ' giorni di sovrapposizione' : '';
+      out += '• ' + (names[l.to] || l.to) + ' ' + verb[l.type] + ' ' +
+        (names[l.from] || l.from) + lagTxt + '.\n' +
+        '  ' + (l.nature === 'discretionary' ? 'Discrezionale' : 'Mandatorio') +
+        ', ' + (l.origin === 'external' ? 'esterno' : 'interno') + '.' +
+        (l.rationale ? ' ' + l.rationale : '') + '\n';
+    });
+  }
+
+  if (step === 4) {
+    const names = {}; (state.tasks || []).forEach(t => { names[t.id] = t.name; });
+    out += 'Id       Attività                                  Dur  Tecnica       Conf.\n';
+    out += '-'.repeat(78) + '\n';
+    (f.estimates || []).forEach(e => {
+      out += e.id.padEnd(9) + String(names[e.id] || '').slice(0, 40).padEnd(42) +
+        String(e.duration).padStart(3) + '  ' + String(e.technique).padEnd(14) + e.confidence + '\n';
+      if (e.technique === 'three-point')
+        out += ' '.repeat(9) + 'tre punti: ' + e.optimistic + ' / ' + e.mostLikely + ' / ' + e.pessimistic + '\n';
+      if (e.basis) out += ' '.repeat(9) + 'base: ' + e.basis +
+        (e.sourceDoc ? '  (' + e.sourceDoc + ')' : '') + '\n';
+    });
+  }
+
+  const qs = state.openQuestions[step] || [];
+  if (qs.length) {
+    out += '\nQuestioni aperte dichiarate\n';
+    qs.forEach(q => { out += '  – ' + q + '\n'; });
+  }
+  return out;
+}
+
+function exportReport() {
+  const m = exportMeta();
+  let out = 'COME È STATO COSTRUITO QUESTO PIANO\n' +
+    'Progetto: ' + m.progetto + '\n' +
+    'Revisione ' + m.revisione + ' — generato il ' +
+    new Date().toLocaleString('it-IT') + '\n' +
+    'Baseline: ' + m.baseline + '\n\n';
+  for (let s = 1; s <= 4; s++) {
+    const r = readableStep(s);
+    if (r) out += r + '\n\n';
+  }
+  const manualKeys = Object.keys(state.manual);
+  if (manualKeys.length) {
+    out += 'MODIFICHE MANUALI SUCCESSIVE ALL\'APPROVAZIONE\n' + '='.repeat(66) + '\n';
+    manualKeys.forEach(k => { out += '  ' + k + ' — modificato alla revisione ' + state.manual[k] + '\n'; });
+  }
+  download(slug(m.progetto) + '-relazione-rev' + m.revisione + '.txt', out);
+}
+
+function renderHistory() {
+  const box = $('histBody');
+  const names = ['', 'WBS', 'Attività e milestone', 'Sequenza', 'Stime'];
+  let html = '';
+  for (let s = 1; s <= 4; s++) {
+    if (!state.approved[s]) continue;
+    const a = state.approved[s];
+    const qs = (state.openQuestions[s] || []).length;
+    html += '<div class="hist-item"><div class="row">' +
+      '<strong>Passaggio ' + s + ' — ' + names[s] + '</strong>' +
+      '<span class="muted">approvato il ' + new Date(a.at).toLocaleString('it-IT') +
+      ', rev ' + a.revision + '</span>' +
+      '<div class="spacer"></div>' +
+      '<button class="btn" data-dl-json="' + s + '">JSON</button>' +
+      '<button class="btn" data-dl-txt="' + s + '">Testo leggibile</button></div>' +
+      (qs ? '<div class="muted" style="font-size:12px;margin-top:4px">' + qs +
+        ' question' + (qs > 1 ? 'i' : 'e') + ' aperte dichiarate</div>' : '') +
+      '</div>';
+  }
+  const manualKeys = Object.keys(state.manual);
+  if (manualKeys.length)
+    html += '<div class="diag-item warn" style="margin-top:12px"><span class="tag">manuale</span><span>' +
+      manualKeys.length + ' element' + (manualKeys.length > 1 ? 'i modificati' : 'o modificato') +
+      ' a mano dopo l\'approvazione: ' + manualKeys.map(escapeHTML).join(', ') + '</span></div>';
+  if (!html) html = '<p class="muted">Nessun passaggio approvato.</p>';
+  box.innerHTML = html;
+
+  box.querySelectorAll('[data-dl-json]').forEach(b => b.addEventListener('click', () => {
+    const s = b.dataset.dlJson;
+    download('passaggio-' + s + '-rev' + state.approved[s].revision + '.json',
+      JSON.stringify(state.fragments[s], null, 2), 'application/json');
+  }));
+  box.querySelectorAll('[data-dl-txt]').forEach(b => b.addEventListener('click', () => {
+    const s = b.dataset.dlTxt;
+    download('passaggio-' + s + '-rev' + state.approved[s].revision + '.txt', readableStep(Number(s)));
+  }));
+}
+
+function restoreOriginal() {
+  const n = Object.keys(state.manual).length + state.buffers.length;
+  confirmModal('Ripristinare il piano originario',
+    ['Il piano torna ai frammenti approvati, come uscito dall\'assistente AI.',
+     n + ' modifiche manuali e riserve verranno scartate.',
+     'L\'operazione non è annullabile.'],
+    () => {
+      pushHistory();
+      if (state.fragments[1]) { state.project = state.fragments[1].project; state.wbs = state.fragments[1].wbs; }
+      if (state.fragments[2]) { state.tasks = state.fragments[2].tasks; state.contributors = state.fragments[2].contributors || []; }
+      if (state.fragments[3]) state.links = state.fragments[3].links;
+      if (state.fragments[4]) state.estimates = state.fragments[4].estimates;
+      state.manual = {}; state.buffers = [];
+      state.revision++;
+      saveState(); renderAll();
+    }, true);
+}
+
+
+/* ============================================================
+   AZIONI
+   ============================================================ */
+
+$('btnCheck').addEventListener('click', () => {
+  const parsed = extractJSON($('pasteBox').value);
+  pendingApproval = null;
+  if (parsed.error) {
+    renderDiagnostics({ errors: [escapeHTML(parsed.error)], warnings: [] });
+    $('btnApprove').disabled = true;
+    return;
+  }
+  const step = currentStep();
+  const res = VALIDATORS[step](parsed.value);
+  renderDiagnostics(res);
+  if (res.errors.length === 0) {
+    pendingApproval = { step, data: res.data, fragment: parsed.value,
+      openQuestions: parsed.value.openQuestions || [] };
+    $('btnApprove').disabled = false;
+  } else {
+    $('btnApprove').disabled = true;
+  }
+});
+
+$('btnApprove').addEventListener('click', () => {
+  if (!pendingApproval) return;
+  const { step, data, fragment, openQuestions } = pendingApproval;
+
+  if (step === 1) { state.project = data.project; state.wbs = data.wbs; }
+  if (step === 2) { state.tasks = data.tasks; state.contributors = data.contributors;
+    state.contributors.forEach(c => {
+      if (!(c.id in state.config.availability)) state.config.availability[c.id] = '';
+    });
+  }
+  if (step === 3) state.links = data.links;
+  if (step === 4) state.estimates = data.estimates;
+
+  // copia profonda: l'archivio non deve seguire le modifiche successive
+  state.fragments[step] = JSON.parse(JSON.stringify(fragment));
+  state.openQuestions[step] = openQuestions;
+  state.approved[step] = { at: new Date().toISOString(), user: state.user || '', revision: state.revision };
+  state.revision++;
+
+  pendingApproval = null;
+  $('pasteBox').value = '';
+  $('btnApprove').disabled = true;
+  renderDiagnostics(null);
+  saveState();
+  renderAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+$('btnClearPaste').addEventListener('click', () => {
+  $('pasteBox').value = '';
+  renderDiagnostics(null);
+  $('btnApprove').disabled = true;
+  pendingApproval = null;
+});
+
+$('btnCopyPrompt').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText($('promptText').textContent);
+    $('copyNote').textContent = 'Copiata.';
+  } catch (e) {
+    $('copyNote').textContent = 'Copia non disponibile: seleziona il testo a mano.';
+  }
+  setTimeout(() => { $('copyNote').textContent = ''; }, 2500);
+});
+
+function showScreen(name) {
+  ['plan','config','net','gantt','arch'].forEach(n => {
+    const el = $({plan:'scrPlan', config:'scrConfig', net:'scrNet',
+                  gantt:'scrGantt', arch:'scrArchive'}[n]);
+    if (el) el.hidden = n !== name;
+  });
+  $('navPlan').setAttribute('aria-current', name === 'plan');
+  $('navNet').setAttribute('aria-current', name === 'net');
+  $('navGantt').setAttribute('aria-current', name === 'gantt');
+  $('navArch').setAttribute('aria-current', name === 'arch');
+  state.view.screen = name;
+  if (name === 'net') renderNet();
+  if (name === 'gantt') renderGantt();
+  if (name === 'arch') renderHistory();
+}
+
+$('btnConfig').addEventListener('click', () => { renderConfig(); showScreen('config'); });
+$('btnCloseCfg').addEventListener('click', () => showScreen('plan'));
+$('navPlan').addEventListener('click', () => showScreen('plan'));
+
+$('btnSaveCfg').addEventListener('click', () => {
+  state.config.start = $('cfgStart').value;
+  state.config.imposedEnd = $('cfgImposed').value;
+  state.config.nearThreshold = Number($('cfgNear').value) || 3;
+  state.config.iterations = Number($('cfgIter').value) || 2000;
+  state.config.holidays = $('cfgHolidays').value.split('\n')
+    .map(s => s.trim()).filter(s => /^\d{4}-\d{2}-\d{2}$/.test(s));
+  document.querySelectorAll('[data-contrib]').forEach(inp => {
+    state.config.availability[inp.dataset.contrib] = inp.value;
+  });
+  saveState();
+  showScreen('plan');
+  renderAll();
+});
+
+
+
+$('navNet').addEventListener('click', () => showScreen('net'));
+$('navGantt').addEventListener('click', () => showScreen('gantt'));
+$('navArch').addEventListener('click', () => showScreen('arch'));
+
+$('btnUndo').addEventListener('click', undo);
+$('btnRedo').addEventListener('click', redo);
+
+$('netEdit').addEventListener('click', () => setEditMode(!editMode));
+$('ganttEdit').addEventListener('click', () => setEditMode(!editMode));
+
+$('netFilter').addEventListener('change', e => {
+  state.view.netFilter = e.target.value; saveState(); renderNet();
+});
+$('ganttFilter').addEventListener('change', e => {
+  state.view.ganttFilter = e.target.value; saveState(); renderGantt();
+});
+$('ownerFilter').addEventListener('change', e => {
+  state.view.owner = e.target.value; saveState(); renderGantt();
+});
+document.querySelectorAll('#scaleSeg button').forEach(b =>
+  b.addEventListener('click', () => {
+    state.view.scale = b.dataset.scale;
+    document.querySelectorAll('#scaleSeg button').forEach(x =>
+      x.setAttribute('aria-pressed', x === b));
+    saveState(); renderGantt();
+  }));
+
+$('btnBuffer').addEventListener('click', openBufferDialog);
+$('btnSim').addEventListener('click', runSimulation);
+$('expJson').addEventListener('click', exportJSON);
+$('expHtml').addEventListener('click', exportHTML);
+$('expReport').addEventListener('click', exportReport);
+$('btnRestore').addEventListener('click', restoreOriginal);
+
+$('netExportSvg').addEventListener('click', () => {
+  const svg = $('netCanvas').querySelector('svg');
+  if (!svg) return;
+  const m = exportMeta();
+  const head = '<!-- ' + m.progetto + ' rev ' + m.revisione + ' — ' +
+    new Date().toLocaleString('it-IT') + ' — filtri: ' + m.filtri + ' -->\n';
+  download(slug(m.progetto) + '-reticolo-rev' + m.revisione + '.svg',
+    head + svg.outerHTML, 'image/svg+xml');
+});
+
+window.addEventListener('keydown', e => {
+  if (!(e.ctrlKey || e.metaKey)) return;
+  if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+  if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); redo(); }
+});
+
+
+/* ============================================================
+   AVVIO
+   ============================================================ */
+
+/* un HTML esportato porta lo stato come seme: si apre anche
+   su una macchina senza archiviazione locale */
+if (typeof window !== 'undefined' && window.__SEED__) {
+  Object.assign(state, window.__SEED__);
+} else {
+  loadState();
+}
+if (!state.config.start) state.config.start = todayISO();
+if (!state.manual) state.manual = {};
+if (!state.buffers) state.buffers = [];
+if (!state.view) state.view = { scale: 'week', netFilter: 'all', ganttFilter: 'all', owner: '' };
+renderAll();
+if (state.view.screen && state.view.screen !== 'config') showScreen(state.view.screen);
+</script>
+</body>
+</html>

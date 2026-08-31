@@ -1,0 +1,64 @@
+{
+  "coreVersion": "1.0",
+  "methodology": "predittivo",
+  "profileVersion": "1.0",
+  "step": 1,
+  "project": {
+    "name": "Portale Prestiti Online",
+    "notes": "Esempio dimostrativo, non un piano reale"
+  },
+  "wbs": [
+    {
+      "code": "1",
+      "name": "Portale Prestiti Online",
+      "parent": null
+    },
+    {
+      "code": "1.1",
+      "name": "Analisi e disegno",
+      "parent": "1"
+    },
+    {
+      "code": "1.1.1",
+      "name": "Requisiti funzionali",
+      "parent": "1.1",
+      "type": "workPackage"
+    },
+    {
+      "code": "1.1.2",
+      "name": "Disegno tecnico",
+      "parent": "1.1",
+      "type": "workPackage"
+    },
+    {
+      "code": "1.2",
+      "name": "Realizzazione",
+      "parent": "1"
+    },
+    {
+      "code": "1.2.1",
+      "name": "Servizi di back end",
+      "parent": "1.2",
+      "type": "workPackage"
+    },
+    {
+      "code": "1.2.2",
+      "name": "Interfaccia cliente",
+      "parent": "1.2",
+      "type": "workPackage"
+    },
+    {
+      "code": "1.3",
+      "name": "Collaudo",
+      "parent": "1",
+      "type": "workPackage"
+    },
+    {
+      "code": "1.4",
+      "name": "Rilascio in produzione",
+      "parent": "1",
+      "type": "planningPackage"
+    }
+  ],
+  "openQuestions": []
+}
