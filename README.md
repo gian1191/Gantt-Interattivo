@@ -8,12 +8,14 @@ Si apre con doppio clic su `pianificatore.html`. Nessuna dipendenza, nessuna
 installazione, nessuna chiamata di rete.
 
 Istruzioni d'uso complete: **[LEGGIMI.md](LEGGIMI.md)**.
+Stato del lavoro e punti aperti: **[SINTESI.md](SINTESI.md)**.
 
 ## Documentazione
 
 | File | A chi serve |
 |---|---|
 | [`LEGGIMI.md`](LEGGIMI.md) | a chi usa l'applicazione |
+| [`SINTESI.md`](SINTESI.md) | a chi riprende il lavoro: cosa è stato fatto, cosa resta |
 | [`docs/guida-assistente-predittivo.md`](docs/guida-assistente-predittivo.md) | va nel Context del workspace dell'assistente AI |
 | [`docs/prompt-da-copiare.md`](docs/prompt-da-copiare.md) | preset e richieste da incollare |
 | [`docs/specifica-applicazione.md`](docs/specifica-applicazione.md) | a chi sviluppa |
